@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 
 import { cookies } from "next/headers";
 
-import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { getPreference } from "@/server/server-actions";
@@ -16,6 +15,7 @@ import {
 } from "@/types/preferences/layout";
 
 import { AccountSwitcher } from "./_components/sidebar/account-switcher";
+import { AppSidebar } from "./_components/sidebar/app-sidebar";
 import { LayoutControls } from "./_components/sidebar/layout-controls";
 import { ThemeSwitcher } from "./_components/sidebar/theme-switcher";
 

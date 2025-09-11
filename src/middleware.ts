@@ -13,7 +13,7 @@ export default clerkMiddleware(async (auth, request) => {
 
   // If user is authenticated and trying to access auth pages, redirect to dashboard
   if (userId && isAuthRoute(request)) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   // If user is not authenticated and trying to access protected routes, redirect to login

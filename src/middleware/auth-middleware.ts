@@ -4,7 +4,7 @@ export function authMiddleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isLoggedIn = req.cookies.get("auth-token");
 
-  if (!isLoggedIn && pathname.startsWith("/dashboard")) {
+  if (!isLoggedIn && pathname === "/") {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
