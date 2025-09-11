@@ -9,7 +9,7 @@ export function authMiddleware(req: NextRequest) {
   }
 
   if (isLoggedIn && pathname === "/auth/login") {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   return NextResponse.next();
