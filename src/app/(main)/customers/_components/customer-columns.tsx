@@ -24,7 +24,7 @@ export const createCustomerColumns = ({ onEdit }: CustomerColumnsProps): ColumnD
       <DataTableColumnHeader column={column} title="Shopify Customer ID" />
     ),
     cell: ({ row }) => {
-      const shopifyId = row.getValue("shopify_customer_id");
+      const shopifyId = row.getValue("shopify_customer_id") as string;
       return (
         <div className="font-mono text-sm">
           {shopifyId ?? <span className="text-muted-foreground italic">Not set</span>}
@@ -38,7 +38,7 @@ export const createCustomerColumns = ({ onEdit }: CustomerColumnsProps): ColumnD
       <DataTableColumnHeader column={column} title="Name" />
     ),
     cell: ({ row }) => {
-      const name = row.getValue("name");
+      const name = row.getValue("name") as string;
       return <div className="font-medium">{name}</div>;
     },
   },
@@ -48,7 +48,7 @@ export const createCustomerColumns = ({ onEdit }: CustomerColumnsProps): ColumnD
       <DataTableColumnHeader column={column} title="Phone" />
     ),
     cell: ({ row }) => {
-      const phone = row.getValue("phone");
+      const phone = row.getValue("phone") as string;
       return (
         <div className="font-mono text-sm">
           {phone ?? <span className="text-muted-foreground italic">Not provided</span>}
@@ -86,7 +86,7 @@ export const createCustomerColumns = ({ onEdit }: CustomerColumnsProps): ColumnD
       <DataTableColumnHeader column={column} title="Created At" />
     ),
     cell: ({ row }) => {
-      const date = row.getValue("created_at");
+      const date = row.getValue("created_at") as string;
       return (
         <div className="text-sm">
           {new Date(date).toLocaleDateString("en-US", {
@@ -104,7 +104,7 @@ export const createCustomerColumns = ({ onEdit }: CustomerColumnsProps): ColumnD
       <DataTableColumnHeader column={column} title="Last Updated" />
     ),
     cell: ({ row }) => {
-      const date = row.getValue("updated_at");
+      const date = row.getValue("updated_at") as string;
       return (
         <div className="text-sm text-muted-foreground">
           {new Date(date).toLocaleDateString("en-US", {

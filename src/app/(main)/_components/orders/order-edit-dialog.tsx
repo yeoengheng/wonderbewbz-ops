@@ -32,10 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Database } from "@/types/database";
+import type { Order, Customer } from "@/types/database";
 
-type Order = Database["public"]["Tables"]["orders"]["Row"];
-type Customer = Database["public"]["Tables"]["customers"]["Row"];
 type OrderWithCustomer = Order & { customer: Customer };
 
 const orderSchema = z.object({
@@ -67,7 +65,7 @@ export function OrderEditDialog({
   const [customers, setCustomers] = useState<Customer[]>([]);
 
   // Create Supabase client
-  const supabase = createClient<Database>(
+  const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
@@ -143,7 +141,7 @@ export function OrderEditDialog({
         // Update existing order
         const { data: updatedOrder, error } = await supabase
           .from("orders")
-          .update(cleanedValues as Partial<Database['public']['Tables']['orders']['Update']>)
+          .update(cleanedValues as any)
           .eq("order_id", order.order_id)
           .select(`
             *,
@@ -161,7 +159,7 @@ export function OrderEditDialog({
         // Create new order
         const { data: newOrder, error } = await supabase
           .from("orders")
-          .insert(cleanedValues as Database['public']['Tables']['orders']['Insert'])
+          .insert(cleanedValues as any)
           .select(`
             *,
             customer:customers(*)

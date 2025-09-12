@@ -27,7 +27,7 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
     accessorKey: "shopify_order_id",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Order ID" />,
     cell: ({ row }) => {
-      const orderId = row.getValue("shopify_order_id");
+      const orderId = row.getValue("shopify_order_id") as string;
       return (
         <div className="flex items-center space-x-2">
           <Package className="text-muted-foreground h-4 w-4" />
@@ -53,12 +53,12 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
     accessorKey: "status",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
-      const status = row.getValue("status");
+      const status = row.getValue("status") as string;
 
       const statusConfig = {
         pending: { label: "Pending", variant: "secondary" as const },
         processing: { label: "Processing", variant: "default" as const },
-        completed: { label: "Completed", variant: "success" as const },
+        completed: { label: "Completed", variant: "outline" as const },
       };
 
       const config = statusConfig[status as keyof typeof statusConfig] ?? statusConfig.pending;
@@ -84,7 +84,7 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
     accessorKey: "phone",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Phone" />,
     cell: ({ row }) => {
-      const phone = row.getValue("phone");
+      const phone = row.getValue("phone") as string;
       return (
         <div className="font-mono text-sm">
           {phone ?? <span className="text-muted-foreground italic">Not provided</span>}
@@ -96,7 +96,7 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
     accessorKey: "created_at",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Order Date" />,
     cell: ({ row }) => {
-      const date = row.getValue("created_at");
+      const date = row.getValue("created_at") as string;
       return (
         <div className="text-sm">
           {new Date(date).toLocaleDateString("en-US", {
@@ -112,7 +112,7 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
     accessorKey: "updated_at",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Last Updated" />,
     cell: ({ row }) => {
-      const date = row.getValue("updated_at");
+      const date = row.getValue("updated_at") as string;
       return (
         <div className="text-muted-foreground text-sm">
           {new Date(date).toLocaleDateString("en-US", {

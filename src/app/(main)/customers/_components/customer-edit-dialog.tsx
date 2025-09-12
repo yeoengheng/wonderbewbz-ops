@@ -110,7 +110,7 @@ export function CustomerEditDialog({
         // Update existing customer
         const { data: updatedCustomer, error } = await supabase
           .from("customers")
-          .update(cleanedValues)
+          .update(cleanedValues as any)
           .eq("customer_id", customer.customer_id)
           .select()
           .single();
@@ -121,7 +121,7 @@ export function CustomerEditDialog({
         // Create new customer
         const { data: newCustomer, error } = await supabase
           .from("customers")
-          .insert(cleanedValues)
+          .insert(cleanedValues as any)
           .select()
           .single();
 
