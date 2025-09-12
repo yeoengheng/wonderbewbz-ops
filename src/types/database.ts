@@ -1,5 +1,5 @@
-export type OrderStatus = 'pending' | 'processing' | 'completed';
-export type MachineRunStatus = 'pending' | 'processing' | 'completed' | 'qa_failed' | 'cancelled';
+export type OrderStatus = "pending" | "processing" | "completed";
+export type MachineRunStatus = "pending" | "processing" | "completed" | "qa_failed" | "cancelled";
 
 export interface Customer {
   customer_id: string;
@@ -33,7 +33,6 @@ export interface MachineRun {
   order_id: string;
   run_number: number;
   status: MachineRunStatus;
-  
   // Order Info inputs
   machine_run?: string;
   mama_name?: string;
@@ -41,17 +40,14 @@ export interface MachineRun {
   date_received?: string;
   date_processed?: string;
   date_packed?: string;
-  
   // Run Calculations inputs
   bags_weight_g?: number;
   powder_weight_g?: number;
   packing_requirements_ml?: number;
   label_water_to_add_ml?: number;
   water_activity_level?: number;
-  
   // Gram Ratio inputs
   gram_ratio_staff_input_ml?: number;
-  
   // Other inputs
   remarks?: string;
   user_id: string; // Clerk user ID
@@ -84,7 +80,7 @@ export interface MachineRunWithBags extends MachineRun {
 }
 
 export interface CompleteOrderView extends OrderWithCustomer {
-  machine_runs: (MachineRunWithBags)[];
+  machine_runs: MachineRunWithBags[];
 }
 
 // Database schema type for Supabase client
@@ -93,23 +89,23 @@ export interface Database {
     Tables: {
       customers: {
         Row: Customer;
-        Insert: Omit<Customer, 'customer_id' | 'created_at' | 'updated_at' | 'user_id'>;
-        Update: Partial<Omit<Customer, 'customer_id' | 'created_at' | 'updated_at' | 'user_id'>>;
+        Insert: Omit<Customer, "customer_id" | "created_at" | "updated_at" | "user_id">;
+        Update: Partial<Omit<Customer, "customer_id" | "created_at" | "updated_at" | "user_id">>;
       };
       orders: {
         Row: Order;
-        Insert: Omit<Order, 'order_id' | 'created_at' | 'updated_at' | 'user_id'>;
-        Update: Partial<Omit<Order, 'order_id' | 'created_at' | 'updated_at' | 'user_id'>>;
+        Insert: Omit<Order, "order_id" | "created_at" | "updated_at" | "user_id">;
+        Update: Partial<Omit<Order, "order_id" | "created_at" | "updated_at" | "user_id">>;
       };
       machine_runs: {
         Row: MachineRun;
-        Insert: Omit<MachineRun, 'machine_run_id' | 'created_at' | 'updated_at' | 'user_id'>;
-        Update: Partial<Omit<MachineRun, 'machine_run_id' | 'created_at' | 'updated_at' | 'user_id'>>;
+        Insert: Omit<MachineRun, "machine_run_id" | "created_at" | "updated_at" | "user_id">;
+        Update: Partial<Omit<MachineRun, "machine_run_id" | "created_at" | "updated_at" | "user_id">>;
       };
       individual_bags: {
         Row: IndividualBag;
-        Insert: Omit<IndividualBag, 'bag_id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<IndividualBag, 'bag_id' | 'created_at' | 'updated_at'>>;
+        Insert: Omit<IndividualBag, "bag_id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<IndividualBag, "bag_id" | "created_at" | "updated_at">>;
       };
     };
     Views: {

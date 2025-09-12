@@ -50,7 +50,7 @@ export function CustomerTable({ initialData = [] }: CustomerTableProps) {
       }
 
       console.log("Loaded customers:", customers?.length || 0);
-      setData(customers || []);
+      setData((customers as unknown as Customer[]) || []);
     } catch (error) {
       console.error("Error loading customers:", error);
     } finally {
@@ -71,11 +71,7 @@ export function CustomerTable({ initialData = [] }: CustomerTableProps) {
     if (selectedCustomer) {
       // Update existing customer
       setData((prev) =>
-        prev.map((customer) =>
-          customer.customer_id === savedCustomer.customer_id
-            ? savedCustomer
-            : customer
-        )
+        prev.map((customer) => (customer.customer_id === savedCustomer.customer_id ? savedCustomer : customer)),
       );
     } else {
       // Add new customer
@@ -90,9 +86,7 @@ export function CustomerTable({ initialData = [] }: CustomerTableProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Customers</h2>
-          <p className="text-muted-foreground">
-            Manage your customer database and information.
-          </p>
+          <p className="text-muted-foreground">Manage your customer database and information.</p>
         </div>
         <Button onClick={handleCreateCustomer}>
           <Plus className="mr-2 h-4 w-4" />

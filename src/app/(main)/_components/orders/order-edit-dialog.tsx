@@ -16,22 +16,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Order, Customer } from "@/types/database";
 
 type OrderWithCustomer = Order & { customer: Customer };
@@ -55,20 +42,12 @@ interface OrderEditDialogProps {
   onSaved: (order: OrderWithCustomer) => void;
 }
 
-export function OrderEditDialog({
-  order,
-  open,
-  onOpenChange,
-  onSaved,
-}: OrderEditDialogProps) {
+export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEditDialogProps) {
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
 
   // Create Supabase client
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -86,10 +65,7 @@ export function OrderEditDialog({
   // Load customers for dropdown
   useEffect(() => {
     const loadCustomers = async () => {
-      const { data } = await supabase
-        .from("customers")
-        .select("*")
-        .order("name");
+      const { data } = await supabase.from("customers").select("*").order("name");
       setCustomers(data ?? []);
     };
 
@@ -131,10 +107,10 @@ export function OrderEditDialog({
       // Clean up empty strings to null for optional fields
       const cleanedValues = {
         ...values,
-        shipping_addr_1: values.shipping_addr_1 || null,
-        shipping_addr_2: values.shipping_addr_2 || null,
-        postal_code: values.postal_code || null,
-        phone: values.phone || null,
+        shipping_addr_1: values.shipping_addr_1 ?? null,
+        shipping_addr_2: values.shipping_addr_2 ?? null,
+        postal_code: values.postal_code ?? null,
+        phone: values.phone ?? null,
       };
 
       if (order) {
@@ -143,10 +119,12 @@ export function OrderEditDialog({
           .from("orders")
           .update(cleanedValues as any)
           .eq("order_id", order.order_id)
-          .select(`
+          .select(
+            `
             *,
             customer:customers(*)
-          `)
+          `,
+          )
           .single();
 
         if (error) {
@@ -160,10 +138,12 @@ export function OrderEditDialog({
         const { data: newOrder, error } = await supabase
           .from("orders")
           .insert(cleanedValues as any)
-          .select(`
+          .select(
+            `
             *,
             customer:customers(*)
-          `)
+          `,
+          )
           .single();
 
         if (error) {
@@ -185,13 +165,9 @@ export function OrderEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>
-            {order ? "Edit Order" : "Create New Order"}
-          </DialogTitle>
+          <DialogTitle>{order ? "Edit Order" : "Create New Order"}</DialogTitle>
           <DialogDescription>
-            {order
-              ? "Update the order information below."
-              : "Fill in the order details to create a new order record."}
+            {order ? "Update the order information below." : "Fill in the order details to create a new order record."}
           </DialogDescription>
         </DialogHeader>
 
@@ -318,19 +294,11 @@ export function OrderEditDialog({
             </div>
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading
-                  ? "Saving..."
-                  : order
-                    ? "Update Order"
-                    : "Create Order"}
+                {loading ? "Saving..." : order ? "Update Order" : "Create Order"}
               </Button>
             </DialogFooter>
           </form>

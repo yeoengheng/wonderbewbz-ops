@@ -25,7 +25,7 @@ export function OrderTable() {
   // Create simple Supabase client
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
   const columns = createOrderColumns({
@@ -41,10 +41,12 @@ export function OrderTable() {
     try {
       const { data: orders, error } = await supabase
         .from("orders")
-        .select(`
+        .select(
+          `
           *,
           customer:customers(*)
-        `)
+        `,
+        )
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -73,11 +75,7 @@ export function OrderTable() {
   const handleOrderSaved = (savedOrder: OrderWithCustomer) => {
     if (selectedOrder) {
       // Update existing order
-      setData((prev) =>
-        prev.map((order) =>
-          order.order_id === savedOrder.order_id ? savedOrder : order
-        )
-      );
+      setData((prev) => prev.map((order) => (order.order_id === savedOrder.order_id ? savedOrder : order)));
     } else {
       // Add new order
       setData((prev) => [savedOrder, ...prev]);
@@ -91,9 +89,7 @@ export function OrderTable() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Orders</h2>
-          <p className="text-muted-foreground">
-            Manage your order processing and fulfillment.
-          </p>
+          <p className="text-muted-foreground">Manage your order processing and fulfillment.</p>
         </div>
         <Button onClick={handleCreateOrder}>
           <Plus className="mr-2 h-4 w-4" />

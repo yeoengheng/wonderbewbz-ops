@@ -27,11 +27,11 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
     accessorKey: "shopify_order_id",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Order ID" />,
     cell: ({ row }) => {
-      const orderId = row.getValue("shopify_order_id") as string;
+      const orderId = row.getValue("shopify_order_id");
       return (
         <div className="flex items-center space-x-2">
           <Package className="text-muted-foreground h-4 w-4" />
-          <span className="font-mono text-sm font-medium">#{orderId?.slice(-8) ?? "N/A"}</span>
+          <span className="font-mono text-sm font-medium">#{String(orderId).slice(-8)}</span>
         </div>
       );
     },
@@ -43,8 +43,8 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
       const order = row.original;
       return (
         <div>
-          <div className="font-medium">{order.customer?.name ?? "Unknown"}</div>
-          <div className="text-muted-foreground text-sm">{order.customer?.phone ?? "No phone"}</div>
+          <div className="font-medium">{order.customer.name}</div>
+          <div className="text-muted-foreground text-sm">{order.customer.phone ?? "No phone"}</div>
         </div>
       );
     },
@@ -53,7 +53,7 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
     accessorKey: "status",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
-      const status = row.getValue("status") as string;
+      const status = row.getValue("status");
 
       const statusConfig = {
         pending: { label: "Pending", variant: "secondary" as const },
@@ -61,7 +61,7 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
         completed: { label: "Completed", variant: "outline" as const },
       };
 
-      const config = statusConfig[status as keyof typeof statusConfig] ?? statusConfig.pending;
+      const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
 
       return <Badge variant={config.variant}>{config.label}</Badge>;
     },
@@ -84,10 +84,10 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
     accessorKey: "phone",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Phone" />,
     cell: ({ row }) => {
-      const phone = row.getValue("phone") as string;
+      const phone = row.getValue("phone");
       return (
         <div className="font-mono text-sm">
-          {phone ?? <span className="text-muted-foreground italic">Not provided</span>}
+          {phone ? String(phone) : <span className="text-muted-foreground italic">Not provided</span>}
         </div>
       );
     },
@@ -96,10 +96,10 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
     accessorKey: "created_at",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Order Date" />,
     cell: ({ row }) => {
-      const date = row.getValue("created_at") as string;
+      const date = row.getValue("created_at");
       return (
         <div className="text-sm">
-          {new Date(date).toLocaleDateString("en-US", {
+          {new Date(String(date)).toLocaleDateString("en-US", {
             year: "numeric",
             month: "short",
             day: "numeric",
@@ -112,10 +112,10 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
     accessorKey: "updated_at",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Last Updated" />,
     cell: ({ row }) => {
-      const date = row.getValue("updated_at") as string;
+      const date = row.getValue("updated_at");
       return (
         <div className="text-muted-foreground text-sm">
-          {new Date(date).toLocaleDateString("en-US", {
+          {new Date(String(date)).toLocaleDateString("en-US", {
             year: "numeric",
             month: "short",
             day: "numeric",

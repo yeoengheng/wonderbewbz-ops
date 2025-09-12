@@ -15,14 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useSupabase } from "@/hooks/use-supabase";
 import type { Customer } from "@/types/database";
@@ -45,12 +38,7 @@ interface CustomerEditDialogProps {
   onSaved: (customer: Customer) => void;
 }
 
-export function CustomerEditDialog({
-  customer,
-  open,
-  onOpenChange,
-  onSaved,
-}: CustomerEditDialogProps) {
+export function CustomerEditDialog({ customer, open, onOpenChange, onSaved }: CustomerEditDialogProps) {
   const [loading, setLoading] = useState(false);
   const { supabase, isLoaded } = useSupabase();
 
@@ -71,12 +59,12 @@ export function CustomerEditDialog({
     if (open) {
       if (customer) {
         form.reset({
-          name: customer.name || "",
-          phone: customer.phone || "",
-          shipping_addr_1: customer.shipping_addr_1 || "",
-          shipping_addr_2: customer.shipping_addr_2 || "",
-          postal_code: customer.postal_code || "",
-          shopify_customer_id: customer.shopify_customer_id || "",
+          name: customer.name ?? "",
+          phone: customer.phone ?? "",
+          shipping_addr_1: customer.shipping_addr_1 ?? "",
+          shipping_addr_2: customer.shipping_addr_2 ?? "",
+          postal_code: customer.postal_code ?? "",
+          shopify_customer_id: customer.shopify_customer_id ?? "",
         });
       } else {
         form.reset({
@@ -91,46 +79,42 @@ export function CustomerEditDialog({
     }
   }, [customer, open, form]);
 
+  const cleanupValues = (values: CustomerFormValues) => ({
+    ...values,
+    phone: values.phone ?? null,
+    shipping_addr_1: values.shipping_addr_1 ?? null,
+    shipping_addr_2: values.shipping_addr_2 ?? null,
+    postal_code: values.postal_code ?? null,
+    shopify_customer_id: values.shopify_customer_id ?? null,
+  });
+
+  const updateCustomer = async (cleanedValues: ReturnType<typeof cleanupValues>) => {
+    const { data, error } = await (supabase as any)
+      .from("customers")
+      .update(cleanedValues)
+      .eq("customer_id", customer!.customer_id)
+      .select()
+      .single();
+    if (error || !data) throw error ?? new Error("Failed to update customer");
+    return data as unknown as Customer;
+  };
+
+  const createCustomer = async (cleanedValues: ReturnType<typeof cleanupValues>) => {
+    const { data, error } = await (supabase as any).from("customers").insert(cleanedValues).select().single();
+    if (error || !data) throw error ?? new Error("Failed to create customer");
+    return data as unknown as Customer;
+  };
+
   const onSubmit = async (values: CustomerFormValues) => {
     if (!isLoaded) return;
 
     setLoading(true);
     try {
-      // Clean up empty strings to null for optional fields
-      const cleanedValues = {
-        ...values,
-        phone: values.phone || null,
-        shipping_addr_1: values.shipping_addr_1 || null,
-        shipping_addr_2: values.shipping_addr_2 || null,
-        postal_code: values.postal_code || null,
-        shopify_customer_id: values.shopify_customer_id || null,
-      };
-
-      if (customer) {
-        // Update existing customer
-        const { data: updatedCustomer, error } = await supabase
-          .from("customers")
-          .update(cleanedValues as any)
-          .eq("customer_id", customer.customer_id)
-          .select()
-          .single();
-
-        if (error) throw error;
-        onSaved(updatedCustomer);
-      } else {
-        // Create new customer
-        const { data: newCustomer, error } = await supabase
-          .from("customers")
-          .insert(cleanedValues as any)
-          .select()
-          .single();
-
-        if (error) throw error;
-        onSaved(newCustomer);
-      }
+      const cleanedValues = cleanupValues(values);
+      const result = customer ? await updateCustomer(cleanedValues) : await createCustomer(cleanedValues);
+      onSaved(result);
     } catch (error) {
       console.error("Error saving customer:", error);
-      // You could add toast notifications here
     } finally {
       setLoading(false);
     }
@@ -140,9 +124,7 @@ export function CustomerEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>
-            {customer ? "Edit Customer" : "Create New Customer"}
-          </DialogTitle>
+          <DialogTitle>{customer ? "Edit Customer" : "Create New Customer"}</DialogTitle>
           <DialogDescription>
             {customer
               ? "Update the customer information below."
@@ -239,19 +221,11 @@ export function CustomerEditDialog({
             </div>
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading
-                  ? "Saving..."
-                  : customer
-                    ? "Update Customer"
-                    : "Create Customer"}
+                {loading ? "Saving..." : customer ? "Update Customer" : "Create Customer"}
               </Button>
             </DialogFooter>
           </form>

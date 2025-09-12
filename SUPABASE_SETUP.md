@@ -5,6 +5,7 @@ This guide covers the complete Supabase setup for the Wonderbewbz operations sys
 ## Database Schema Overview
 
 The system consists of 4 main tables with the following relationship:
+
 ```
 Customer (1) ──< Orders (∞) ──< Machine Runs (∞) ──< Individual Bags (∞)
 ```
@@ -53,6 +54,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ### Query Functions Available
 
 #### Customer Operations
+
 - `customerQueries.getAll()`
 - `customerQueries.getById(customerId)`
 - `customerQueries.getByShopifyId(shopifyCustomerId)`
@@ -60,6 +62,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 - `customerQueries.update(customerId, updates)`
 
 #### Order Operations
+
 - `orderQueries.getAll()` - Returns orders with customer data
 - `orderQueries.getById(orderId)`
 - `orderQueries.getByShopifyId(shopifyOrderId)`
@@ -67,6 +70,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 - `orderQueries.updateStatus(orderId, status)`
 
 #### Machine Run Operations
+
 - `machineRunQueries.getAll()` - Returns runs with order and customer data
 - `machineRunQueries.getById(machineRunId)` - Includes individual bags
 - `machineRunQueries.getByOrderId(orderId)`
@@ -74,55 +78,59 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 - `machineRunQueries.update(machineRunId, updates)`
 
 #### Individual Bag Operations
+
 - `bagQueries.getByMachineRunId(machineRunId)`
 - `bagQueries.create(bagData)`
 - `bagQueries.createBatch(bagsArray)` - For bulk bag creation
 - `bagQueries.update(bagId, updates)`
 
 #### Complex Queries
+
 - `complexQueries.getCompleteOrder(orderId)` - Full order with all runs and bags
 - `complexQueries.getDashboardStats()` - Summary statistics
 
 ## Usage Examples
 
 ### Creating a new order with customer
+
 ```typescript
-import { customerQueries, orderQueries } from '@/lib/database/queries';
+import { customerQueries, orderQueries } from "@/lib/database/queries";
 
 // Create or get customer
 const customer = await customerQueries.create({
-  shopify_customer_id: '12345',
-  name: 'John Doe',
-  phone: '+65 1234 5678',
-  shipping_addr_1: '123 Main St',
-  postal_code: '123456'
+  shopify_customer_id: "12345",
+  name: "John Doe",
+  phone: "+65 1234 5678",
+  shipping_addr_1: "123 Main St",
+  postal_code: "123456",
 });
 
 // Create order
 const order = await orderQueries.create({
-  shopify_order_id: 'order_67890',
+  shopify_order_id: "order_67890",
   customer_id: customer.customer_id,
-  status: 'pending',
+  status: "pending",
   shipping_addr_1: customer.shipping_addr_1,
   postal_code: customer.postal_code,
-  phone: customer.phone
+  phone: customer.phone,
 });
 ```
 
 ### Creating a machine run with bags
+
 ```typescript
-import { machineRunQueries, bagQueries } from '@/lib/database/queries';
+import { machineRunQueries, bagQueries } from "@/lib/database/queries";
 
 // Create machine run
 const machineRun = await machineRunQueries.create({
-  order_id: 'order-uuid',
+  order_id: "order-uuid",
   run_number: 1,
-  status: 'processing',
-  mama_name: 'Jane Smith',
-  mama_nric: 'S1234567A',
-  date_received: '2024-01-15',
+  status: "processing",
+  mama_name: "Jane Smith",
+  mama_nric: "S1234567A",
+  date_received: "2024-01-15",
   bags_weight_g: 500.5,
-  powder_weight_g: 450.2
+  powder_weight_g: 450.2,
 });
 
 // Create individual bags
@@ -130,25 +138,26 @@ const bags = await bagQueries.createBatch([
   {
     machine_run_id: machineRun.machine_run_id,
     bag_number: 1,
-    date_expressed: '2024-01-14',
-    time_expressed: '09:30:00',
-    weight_g: 125.5
+    date_expressed: "2024-01-14",
+    time_expressed: "09:30:00",
+    weight_g: 125.5,
   },
   {
     machine_run_id: machineRun.machine_run_id,
     bag_number: 2,
-    date_expressed: '2024-01-14',
-    time_expressed: '11:15:00',
-    weight_g: 130.2
-  }
+    date_expressed: "2024-01-14",
+    time_expressed: "11:15:00",
+    weight_g: 130.2,
+  },
 ]);
 ```
 
 ### Getting complete order data
-```typescript
-import { complexQueries } from '@/lib/database/queries';
 
-const completeOrder = await complexQueries.getCompleteOrder('order-uuid');
+```typescript
+import { complexQueries } from "@/lib/database/queries";
+
+const completeOrder = await complexQueries.getCompleteOrder("order-uuid");
 // Returns order with customer, all machine runs, and all individual bags
 ```
 
@@ -164,9 +173,11 @@ const completeOrder = await complexQueries.getCompleteOrder('order-uuid');
 Since you're using Clerk for authentication, here are the integration options:
 
 ### Option 1: Basic Integration (No User Tracking)
+
 Your current setup works as-is. Clerk handles authentication, Supabase handles data. Use the regular query functions from `src/lib/database/queries.ts`.
 
 ### Option 2: User Tracking (Recommended)
+
 Track which Clerk user creates/modifies records:
 
 1. **Run Migration**: `supabase/migrations/003_add_user_tracking.sql` (optional)
@@ -174,14 +185,15 @@ Track which Clerk user creates/modifies records:
 3. **Benefits**: Audit trail, user-specific data filtering, activity tracking
 
 #### Usage with Clerk Integration:
+
 ```typescript
-import { authenticatedQueries } from '@/lib/database/authenticated-queries';
+import { authenticatedQueries } from "@/lib/database/authenticated-queries";
 
 // Automatically includes Clerk user ID
 const order = await authenticatedQueries.orders.create({
-  shopify_order_id: 'order_123',
-  customer_id: 'customer-uuid',
-  status: 'pending'
+  shopify_order_id: "order_123",
+  customer_id: "customer-uuid",
+  status: "pending",
 });
 
 // Get current user's activity
@@ -189,11 +201,13 @@ const activity = await authenticatedQueries.getUserActivity();
 ```
 
 #### Available Integration Utilities:
+
 - `getAuthenticatedSupabaseClient()` - Get Supabase client with Clerk context
 - `getCurrentUserProfile()` - Get Clerk user profile data
 - `createUserRecord()` - Helper for user-associated records
 
 ### Environment Variables
+
 Add these to your `.env.local`:
 
 ```env

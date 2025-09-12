@@ -7,11 +7,7 @@ import { authMiddleware } from "./middleware/auth-middleware";
 export function middleware(req: NextRequest) {
   // authMiddleware
   const response = authMiddleware(req);
-  if (response) {
-    return response;
-  }
-
-  return NextResponse.next();
+  return response || NextResponse.next();
 }
 
 export const config = {

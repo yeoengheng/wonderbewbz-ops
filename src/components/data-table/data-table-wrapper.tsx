@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -14,10 +15,11 @@ import {
 } from "@tanstack/react-table";
 
 import { Input } from "@/components/ui/input";
+
 import { DataTable } from "./data-table";
 import { DataTablePagination } from "./data-table-pagination";
-import { DataTableViewOptions } from "./data-table-view-options";
 import { DataTableSkeleton } from "./data-table-skeleton";
+import { DataTableViewOptions } from "./data-table-view-options";
 
 interface DataTableWrapperProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -73,21 +75,14 @@ export function DataTableWrapper<TData, TValue>({
           <Input
             placeholder={searchPlaceholder}
             value={(table.getColumn(searchKey as string)?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn(searchKey as string)?.setFilterValue(event.target.value)
-            }
+            onChange={(event) => table.getColumn(searchKey as string)?.setFilterValue(event.target.value)}
             className="max-w-sm"
           />
         )}
         <DataTableViewOptions table={table} />
       </div>
       <div className="rounded-md border">
-        <DataTable 
-          table={table} 
-          columns={columns} 
-          dndEnabled={dndEnabled}
-          onReorder={onReorder}
-        />
+        <DataTable table={table} columns={columns} dndEnabled={dndEnabled} onReorder={onReorder} />
       </div>
       <DataTablePagination table={table} />
     </div>
