@@ -48,29 +48,6 @@ I’ve taken design inspiration from various sources. Feel free to open an issue
 - **Data Table**: TanStack Table  
 - **Tooling**: ESLint, Prettier, Husky
 
-## Screens
-
-✅ Available  
-🚧 Coming Soon
-
-### Dashboards
-- ✅ Default
-- ✅ CRM
-- ✅ Finance
-- 🚧 Analytics
-- 🚧 eCommerce
-- 🚧 Academy
-- 🚧 Logistics
-
-### Pages
-- 🚧 Email
-- 🚧 Chat
-- 🚧 Calendar
-- 🚧 Kanban
-- 🚧 Invoice
-- 🚧 Users
-- 🚧 Roles
-- ✅ Authentication (4 screens)
 
 ## Colocation File System Architecture
 

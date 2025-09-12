@@ -32,12 +32,12 @@ export const sidebarItems: NavGroup[] = [
     items: [
       {
         title: "Orders",
-        url: "/dashboard/orders",
+        url: "/",
         icon: ShoppingCart,
       },
       {
         title: "Customers",
-        url: "/dashboard/customers",
+        url: "/customers",
         icon: Users,
       },
     ],

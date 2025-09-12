@@ -2,13 +2,13 @@ import { Suspense } from "react";
 
 import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
 
-import { OrderTable } from "./_components/orders/order-table";
+import { CustomerTable } from "./_components/customer-table";
 
-export default function DashboardPage() {
+export default function CustomersPage() {
   return (
     <div className="container mx-auto py-6">
       <Suspense fallback={<DataTableSkeleton />}>
-        <OrderTable />
+        <CustomerTable />
       </Suspense>
     </div>
   );

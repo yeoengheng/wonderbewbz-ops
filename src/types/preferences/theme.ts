@@ -41,11 +41,11 @@ export const THEME_PRESET_OPTIONS = [
     },
   },
   {
-    label: "Tangerine",
-    value: "tangerine",
+    label: "Wonderbewbz",
+    value: "wonderbewbz",
     primary: {
-      light: "oklch(0.64 0.17 36.44)",
-      dark: "oklch(0.64 0.17 36.44)",
+      light: "oklch(0.8536 0.0706 18.64)",
+      dark: "oklch(0.8536 0.0706 18.64)",
     },
   },
 ] as const;
