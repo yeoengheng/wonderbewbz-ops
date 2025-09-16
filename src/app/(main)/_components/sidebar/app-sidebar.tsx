@@ -1,6 +1,5 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { Command } from "lucide-react";
 
 import {
@@ -15,23 +14,8 @@ import {
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 
 import { NavMain } from "./nav-main";
-import { NavUser } from "./nav-user";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser();
-
-  const userData = user
-    ? {
-        name: user.fullName ?? user.firstName ?? "User",
-        email: user.primaryEmailAddress?.emailAddress ?? "",
-        avatar: user.imageUrl ?? "",
-      }
-    : {
-        name: "User",
-        email: "",
-        avatar: "",
-      };
-
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -49,9 +33,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={sidebarItems} />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={userData} />
-      </SidebarFooter>
     </Sidebar>
   );
 }

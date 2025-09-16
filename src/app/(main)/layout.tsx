@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 
 import { cookies } from "next/headers";
 
+import { currentUser } from "@clerk/nextjs/server";
+
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { getPreference } from "@/server/server-actions";
@@ -23,7 +25,8 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
 
-  const [sidebarVariant, sidebarCollapsible, contentLayout] = await Promise.all([
+  const [user, sidebarVariant, sidebarCollapsible, contentLayout] = await Promise.all([
+    currentUser(),
     getPreference<SidebarVariant>("sidebar_variant", SIDEBAR_VARIANT_VALUES, "inset"),
     getPreference<SidebarCollapsible>("sidebar_collapsible", SIDEBAR_COLLAPSIBLE_VALUES, "icon"),
     getPreference<ContentLayout>("content_layout", CONTENT_LAYOUT_VALUES, "centered"),
@@ -56,15 +59,25 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
               <LayoutControls {...layoutPreferences} />
               <ThemeSwitcher />
               <AccountSwitcher
-                users={[
-                  {
-                    id: "1",
-                    name: "User",
-                    email: "user@example.com",
-                    avatar: "",
-                    role: "admin",
-                  },
-                ]}
+                users={
+                  user
+                    ? [
+                        {
+                          id: user.id,
+                          name: user.username ?? user.fullName ?? user.firstName ?? "User",
+                          email: user.primaryEmailAddress?.emailAddress ?? "",
+                          avatar: user.imageUrl ?? "",
+                        },
+                      ]
+                    : [
+                        {
+                          id: "guest",
+                          name: "Guest",
+                          email: "guest@example.com",
+                          avatar: "",
+                        },
+                      ]
+                }
               />
             </div>
           </div>

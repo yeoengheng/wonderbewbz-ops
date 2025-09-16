@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { BadgeCheck, Bell, CreditCard, LogOut } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
+import { LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -23,10 +23,10 @@ export function AccountSwitcher({
     readonly name: string;
     readonly email: string;
     readonly avatar: string;
-    readonly role: string;
   }>;
 }) {
   const [activeUser, setActiveUser] = useState(users[0]);
+  const { signOut } = useClerk();
 
   return (
     <DropdownMenu>
@@ -50,28 +50,13 @@ export function AccountSwitcher({
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-xs capitalize">{user.role}</span>
+                <span className="text-muted-foreground truncate text-xs">{user.email}</span>
               </div>
             </div>
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <BadgeCheck />
-            Account
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCard />
-            Billing
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Bell />
-            Notifications
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => signOut()}>
           <LogOut />
           Log out
         </DropdownMenuItem>
