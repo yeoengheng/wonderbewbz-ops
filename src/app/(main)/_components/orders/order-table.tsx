@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 
-import { createClient } from "@supabase/supabase-js";
 import { Plus } from "lucide-react";
 
 import { DataTableWrapper } from "@/components/data-table/data-table-wrapper";
 import { Button } from "@/components/ui/button";
+import { useSupabase } from "@/hooks/use-supabase";
 import type { Database } from "@/types/database";
 
 import { createOrderColumns } from "./order-columns";
@@ -16,17 +16,16 @@ type Order = Database["public"]["Tables"]["orders"]["Row"];
 type Customer = Database["public"]["Tables"]["customers"]["Row"];
 type OrderWithCustomer = Order & { customer: Customer };
 
-export function OrderTable() {
-  const [data, setData] = useState<OrderWithCustomer[]>([]);
-  const [loading, setLoading] = useState(true);
+interface OrderTableProps {
+  initialData?: OrderWithCustomer[];
+}
+
+export function OrderTable({ initialData = [] }: OrderTableProps) {
+  const [data, setData] = useState<OrderWithCustomer[]>(initialData);
+  const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderWithCustomer | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
-  // Create simple Supabase client
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const { supabase, isLoaded } = useSupabase();
 
   const columns = createOrderColumns({
     onEdit: (order) => {
@@ -36,6 +35,11 @@ export function OrderTable() {
   });
 
   const loadOrders = async () => {
+    if (!isLoaded) {
+      console.log("Supabase client not loaded yet");
+      return;
+    }
+
     console.log("Loading orders from Supabase...");
     setLoading(true);
     try {
@@ -65,7 +69,7 @@ export function OrderTable() {
 
   useEffect(() => {
     loadOrders();
-  }, [loadOrders]);
+  }, [isLoaded]);
 
   const handleCreateOrder = () => {
     setSelectedOrder(null);
