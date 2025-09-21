@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 import { useSupabase } from "@/hooks/use-supabase";
 import type { Database } from "@/types/database";
 
+import { MachineRunSidepanel } from "./machine-run-sidepanel";
 import { createOrderColumns } from "./order-columns";
 import { OrderEditDialog } from "./order-edit-dialog";
 
 type Order = Database["public"]["Tables"]["orders"]["Row"];
 type Customer = Database["public"]["Tables"]["customers"]["Row"];
-type OrderWithCustomer = Order & { customer: Customer };
+type MachineRun = Database["public"]["Tables"]["machine_runs"]["Row"];
+type OrderWithCustomer = Order & { customer: Customer; machine_runs?: MachineRun[] };
 
 interface OrderTableProps {
   initialData?: OrderWithCustomer[];
@@ -25,12 +27,18 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderWithCustomer | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedMachineRun, setSelectedMachineRun] = useState<MachineRun | null>(null);
+  const [isSidepanelOpen, setIsSidepanelOpen] = useState(false);
   const { supabase, isLoaded } = useSupabase();
 
   const columns = createOrderColumns({
     onEdit: (order) => {
       setSelectedOrder(order);
       setIsEditDialogOpen(true);
+    },
+    onMachineRunClick: (machineRun) => {
+      setSelectedMachineRun(machineRun);
+      setIsSidepanelOpen(true);
     },
   });
 
@@ -48,7 +56,8 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
         .select(
           `
           *,
-          customer:customers(*)
+          customer:customers(*),
+          machine_runs(*)
         `,
         )
         .order("created_at", { ascending: false });
@@ -115,6 +124,8 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
         onOpenChange={setIsEditDialogOpen}
         onSaved={handleOrderSaved}
       />
+
+      <MachineRunSidepanel machineRun={selectedMachineRun} open={isSidepanelOpen} onOpenChange={setIsSidepanelOpen} />
     </div>
   );
 }

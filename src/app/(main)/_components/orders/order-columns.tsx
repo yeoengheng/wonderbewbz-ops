@@ -16,13 +16,18 @@ import type { Database } from "@/types/database";
 
 type Order = Database["public"]["Tables"]["orders"]["Row"];
 type Customer = Database["public"]["Tables"]["customers"]["Row"];
-type OrderWithCustomer = Order & { customer: Customer };
+type MachineRun = Database["public"]["Tables"]["machine_runs"]["Row"];
+type OrderWithCustomer = Order & { customer: Customer; machine_runs?: MachineRun[] };
 
 interface OrderColumnsProps {
   onEdit: (order: OrderWithCustomer) => void;
+  onMachineRunClick: (machineRun: MachineRun) => void;
 }
 
-export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<OrderWithCustomer>[] => [
+export const createOrderColumns = ({
+  onEdit,
+  onMachineRunClick,
+}: OrderColumnsProps): ColumnDef<OrderWithCustomer>[] => [
   {
     accessorKey: "shopify_order_id",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Order ID" />,
@@ -88,6 +93,36 @@ export const createOrderColumns = ({ onEdit }: OrderColumnsProps): ColumnDef<Ord
       return (
         <div className="font-mono text-sm">
           {phone ? String(phone) : <span className="text-muted-foreground italic">Not provided</span>}
+        </div>
+      );
+    },
+  },
+  {
+    id: "machine_runs",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Machine Runs" />,
+    cell: ({ row }) => {
+      const order = row.original;
+      const machineRuns = order.machine_runs ?? [];
+
+      if (machineRuns.length === 0) {
+        return <span className="text-muted-foreground italic">No runs</span>;
+      }
+
+      return (
+        <div className="flex flex-wrap gap-1">
+          {machineRuns.map((run, index) => (
+            <span key={run.machine_run_id} className="inline-flex items-center">
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto p-0 font-medium text-blue-600 underline hover:text-blue-800"
+                onClick={() => onMachineRunClick(run)}
+              >
+                {run.run_number}-{String.fromCharCode(65 + index)}
+              </Button>
+              {index < machineRuns.length - 1 && <span className="text-muted-foreground ml-1">,</span>}
+            </span>
+          ))}
         </div>
       );
     },

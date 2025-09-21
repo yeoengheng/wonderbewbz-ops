@@ -19,9 +19,9 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Order, Customer } from "@/types/database";
+import type { Order, Customer, MachineRun } from "@/types/database";
 
-type OrderWithCustomer = Order & { customer: Customer };
+type OrderWithCustomer = Order & { customer: Customer; machine_runs?: MachineRun[] };
 
 const orderSchema = z.object({
   shopify_order_id: z.string().min(1, "Order ID is required"),
@@ -122,7 +122,8 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
           .select(
             `
             *,
-            customer:customers(*)
+            customer:customers(*),
+            machine_runs(*)
           `,
           )
           .single();
@@ -141,7 +142,8 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
           .select(
             `
             *,
-            customer:customers(*)
+            customer:customers(*),
+            machine_runs(*)
           `,
           )
           .single();
