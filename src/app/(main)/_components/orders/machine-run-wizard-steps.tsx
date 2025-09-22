@@ -110,7 +110,7 @@ export function Step2({
             {date !== "unassigned" && (
               <div className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
                 <Calendar className="h-4 w-4" />
-                {new Date(date).toLocaleDateString()}
+                {date}
               </div>
             )}
 

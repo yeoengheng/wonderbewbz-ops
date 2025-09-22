@@ -67,6 +67,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete }: Mach
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<WizardData>(initialData);
   const [loading, setLoading] = useState(false);
+  const [bagCounter, setBagCounter] = useState(0);
   const { supabase, isLoaded } = useSupabase();
 
   const steps = [
@@ -80,8 +81,10 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete }: Mach
   };
 
   const addBag = () => {
+    const nextCounter = bagCounter + 1;
+    setBagCounter(nextCounter);
     const newBag: IndividualBag = {
-      id: Date.now().toString(),
+      id: `bag-${nextCounter}`,
       date: "",
       weight: "",
     };
@@ -190,6 +193,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete }: Mach
 
       setData(initialData);
       setCurrentStep(1);
+      setBagCounter(0);
       onComplete();
     } catch (error) {
       console.error("Error saving machine run:", error);
@@ -201,6 +205,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete }: Mach
   const handleCancel = () => {
     setData(initialData);
     setCurrentStep(1);
+    setBagCounter(0);
     onOpenChange(false);
   };
 
