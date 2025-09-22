@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { Plus } from "lucide-react";
 
@@ -30,7 +30,7 @@ export function CustomerTable({ initialData = [] }: CustomerTableProps) {
     },
   });
 
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     if (!isLoaded) {
       console.log("Supabase client not loaded yet");
       return;
@@ -56,11 +56,11 @@ export function CustomerTable({ initialData = [] }: CustomerTableProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isLoaded, supabase]);
 
   useEffect(() => {
     loadCustomers();
-  }, [isLoaded]);
+  }, [loadCustomers]);
 
   const handleCreateCustomer = () => {
     setSelectedCustomer(null);
