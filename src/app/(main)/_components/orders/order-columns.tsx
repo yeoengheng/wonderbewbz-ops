@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Package } from "lucide-react";
+import { MoreHorizontal, Pencil, Package, Settings } from "lucide-react";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
@@ -22,11 +22,13 @@ type OrderWithCustomer = Order & { customer: Customer; machine_runs?: MachineRun
 interface OrderColumnsProps {
   onEdit: (order: OrderWithCustomer) => void;
   onMachineRunClick: (machineRun: MachineRun) => void;
+  onManageMachineRuns: (order: OrderWithCustomer) => void;
 }
 
 export const createOrderColumns = ({
   onEdit,
   onMachineRunClick,
+  onManageMachineRuns,
 }: OrderColumnsProps): ColumnDef<OrderWithCustomer>[] => [
   {
     accessorKey: "shopify_order_id",
@@ -177,6 +179,10 @@ export const createOrderColumns = ({
             <DropdownMenuItem onClick={() => onEdit(order)}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit Order
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onManageMachineRuns(order)}>
+              <Settings className="mr-2 h-4 w-4" />
+              Add/Edit Machine Runs
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

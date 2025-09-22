@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useSupabase } from "@/hooks/use-supabase";
 import type { Database } from "@/types/database";
 
+import { MachineRunManagementDialog } from "./machine-run-management-dialog";
 import { MachineRunSidepanel } from "./machine-run-sidepanel";
 import { createOrderColumns } from "./order-columns";
 import { OrderEditDialog } from "./order-edit-dialog";
@@ -29,6 +30,8 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedMachineRun, setSelectedMachineRun] = useState<MachineRun | null>(null);
   const [isSidepanelOpen, setIsSidepanelOpen] = useState(false);
+  const [selectedOrderForMachineRuns, setSelectedOrderForMachineRuns] = useState<OrderWithCustomer | null>(null);
+  const [isMachineRunDialogOpen, setIsMachineRunDialogOpen] = useState(false);
   const { supabase, isLoaded } = useSupabase();
 
   const columns = createOrderColumns({
@@ -39,6 +42,10 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
     onMachineRunClick: (machineRun) => {
       setSelectedMachineRun(machineRun);
       setIsSidepanelOpen(true);
+    },
+    onManageMachineRuns: (order) => {
+      setSelectedOrderForMachineRuns(order);
+      setIsMachineRunDialogOpen(true);
     },
   });
 
@@ -126,6 +133,16 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
       />
 
       <MachineRunSidepanel machineRun={selectedMachineRun} open={isSidepanelOpen} onOpenChange={setIsSidepanelOpen} />
+
+      <MachineRunManagementDialog
+        order={selectedOrderForMachineRuns}
+        open={isMachineRunDialogOpen}
+        onOpenChange={setIsMachineRunDialogOpen}
+        onMachineRunClick={(machineRun) => {
+          setSelectedMachineRun(machineRun);
+          setIsSidepanelOpen(true);
+        }}
+      />
     </div>
   );
 }
