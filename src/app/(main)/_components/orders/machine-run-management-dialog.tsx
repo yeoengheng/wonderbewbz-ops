@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { Plus } from "lucide-react";
 
@@ -44,7 +44,7 @@ export function MachineRunManagementDialog({
   const [orderInfo, setOrderInfo] = useState<EditableOrderInfo>({ name: "", phone: "" });
   const { supabase, isLoaded } = useSupabase();
 
-  const loadMachineRuns = async () => {
+  const loadMachineRuns = useCallback(async () => {
     if (!order || !isLoaded) return;
 
     setLoading(true);
@@ -66,7 +66,7 @@ export function MachineRunManagementDialog({
     } finally {
       setLoading(false);
     }
-  };
+  }, [order, isLoaded, supabase]);
 
   useEffect(() => {
     if (order) {
