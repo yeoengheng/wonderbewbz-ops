@@ -1,0 +1,14 @@
+- Run calculations
+  - Total weight of all bags `Individual bags' weights add up`
+  - Total wet weight (g) `Weight of all bags - bags weight`
+  - Water removed (g) `total wet weight - powder weight`
+  - Packing total (ml) `packed powder weight + label: water to add`
+  - Packed powder weight (g) `label: water to add * power to pack per ml`
+  - Breastmilk water content % `100-(Powder weight / Total wet weight * 100)`
+  - Power to pack per ml `powder weight / water removed`
+  - Powder per unit (g) `power weight / total wet weight`
+  - Water to add per unit (g) `1 - power per unit`
+- Gram ratio
+  - packing total (ml) `packed power weight + water to add (ml) label`
+  - packed power weight `powder per unit * staff input`
+  - water to add (ml) label `water to add per unit * staff input`

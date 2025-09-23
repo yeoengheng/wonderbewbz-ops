@@ -48,6 +48,9 @@ const machineRunSchema = z.object({
   mamaName: z.string().min(1, "Mama's name is required"),
   mamaNric: z.string().min(1, "Mama's NRIC is required"),
   dateExpressed: z.string().min(1, "Date expressed is required"),
+  machineRun: z.string(),
+  dateProcessed: z.string(),
+  datePacked: z.string(),
 
   // Step 2: Individual Bags
   bags: z.array(individualBagSchema).min(1, "At least one bag is required"),
@@ -59,8 +62,6 @@ const machineRunSchema = z.object({
   waterToAdd: z.string(),
   waterActivityLevel: z.string(),
   gramRatioStaffInput: z.string(),
-  dateProcessed: z.string(),
-  datePacked: z.string(),
 });
 
 type WizardData = z.infer<typeof machineRunSchema>;
@@ -69,6 +70,9 @@ const initialData: WizardData = {
   mamaName: "",
   mamaNric: "",
   dateExpressed: "",
+  machineRun: "",
+  dateProcessed: "",
+  datePacked: "",
   bags: [],
   bagsWeight: "",
   powderWeight: "",
@@ -76,8 +80,6 @@ const initialData: WizardData = {
   waterToAdd: "",
   waterActivityLevel: "",
   gramRatioStaffInput: "",
-  dateProcessed: "",
-  datePacked: "",
 };
 
 export function MachineRunWizard({ open, onOpenChange, order, onComplete, editingMachineRun }: MachineRunWizardProps) {
@@ -103,6 +105,9 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     mamaName: mr.mama_name ?? "",
     mamaNric: mr.mama_nric ?? "",
     dateExpressed: mr.date_received ?? "",
+    machineRun: mr.run_number?.toString() ?? "",
+    dateProcessed: mr.date_processed ?? "",
+    datePacked: mr.date_packed ?? "",
   });
 
   const getWeightData = (mr: MachineRun) => ({
@@ -117,17 +122,11 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     gramRatioStaffInput: mr.gram_ratio_staff_input_ml?.toString() ?? "",
   });
 
-  const getDateData = (mr: MachineRun) => ({
-    dateProcessed: mr.date_processed ?? "",
-    datePacked: mr.date_packed ?? "",
-  });
-
   const mapMachineRunToFormData = useCallback(
     (machineRun: MachineRun): Partial<WizardData> => ({
       ...getBasicInfo(machineRun),
       ...getWeightData(machineRun),
       ...getWaterData(machineRun),
-      ...getDateData(machineRun),
     }),
     [],
   );
@@ -417,19 +416,19 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
           {steps.map((step) => (
             <div key={step.number} className="flex flex-col items-center">
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-center text-sm font-medium ${
                   step.number === currentStep
-                    ? "bg-blue-600 text-white"
+                    ? "bg-secondary text-secondary-foreground"
                     : step.number < currentStep
-                      ? "bg-blue-100 text-blue-600"
-                      : "bg-gray-200 text-gray-400"
+                      ? "bg-secondary/20 text-secondary-foreground"
+                      : "bg-muted text-muted-foreground"
                 }`}
               >
                 {step.number}
               </div>
               <span
                 className={`mt-1 text-sm ${
-                  step.number === currentStep ? "font-medium text-blue-600" : "text-gray-500"
+                  step.number === currentStep ? "text-muted-foreground font-medium" : "text-muted-foreground"
                 }`}
               >
                 {step.title}
@@ -440,18 +439,20 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
 
         {/* Step Content */}
         <div className="py-6">
-          {currentStep === 1 && <Step1 data={data} updateData={updateData} />}
-          {currentStep === 2 && (
-            <Step2
-              data={data}
-              addBagToDate={addBagToDate}
-              updateBag={updateBag}
-              removeBag={removeBag}
-              addDateGroup={addDateGroup}
-              updateDateGroupDate={updateDateGroupDate}
-            />
-          )}
-          {currentStep === 3 && <Step3 data={data} updateData={updateData} />}
+          <div className="mx-auto w-full max-w-4xl">
+            {currentStep === 1 && <Step1 data={data} updateData={updateData} />}
+            {currentStep === 2 && (
+              <Step2
+                data={data}
+                addBagToDate={addBagToDate}
+                updateBag={updateBag}
+                removeBag={removeBag}
+                addDateGroup={addDateGroup}
+                updateDateGroupDate={updateDateGroupDate}
+              />
+            )}
+            {currentStep === 3 && <Step3 data={data} updateData={updateData} />}
+          </div>
         </div>
 
         {/* Navigation */}

@@ -16,6 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/types/database";
 
+import { SidepanelIndividualBags } from "./sidepanel-individual-bags";
+
 type MachineRun = Database["public"]["Tables"]["machine_runs"]["Row"];
 
 interface MachineRunSidepanelProps {
@@ -150,36 +152,6 @@ function AdditionalInputsSection({ machineRun }: { machineRun: MachineRun }) {
   );
 }
 
-function IndividualBagsSection() {
-  return (
-    <div className="space-y-4">
-      <div className="bg-card rounded-lg border">
-        <div className="bg-muted/50 border-b p-4">
-          <h3 className="text-sm font-medium">📦 Individual Bags</h3>
-        </div>
-        <div className="p-8 text-center">
-          <div className="space-y-3">
-            <div className="bg-muted mx-auto flex h-16 w-16 items-center justify-center rounded-full">
-              <svg className="text-muted-foreground h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                />
-              </svg>
-            </div>
-            <h4 className="font-medium">Individual Bags</h4>
-            <p className="text-muted-foreground mx-auto max-w-sm text-sm">
-              Individual bag details and tracking information will be displayed here when available.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function MachineRunSidepanel({
   machineRun,
   open,
@@ -249,7 +221,7 @@ export function MachineRunSidepanel({
             </TabsContent>
 
             <TabsContent value="individual-bags" className="space-y-8 px-1">
-              <IndividualBagsSection />
+              <SidepanelIndividualBags machineRun={machineRun} />
             </TabsContent>
           </Tabs>
         </div>
