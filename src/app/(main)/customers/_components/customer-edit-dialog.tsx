@@ -18,6 +18,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useSupabase } from "@/hooks/use-supabase";
+import { cleanupCustomerValues } from "@/lib/form-utils";
 import type { Customer } from "@/types/database";
 
 const customerSchema = z.object({
@@ -79,30 +80,25 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onSaved }: Cu
     }
   }, [customer, open, form]);
 
-  const cleanupValues = (values: CustomerFormValues) => ({
-    ...values,
-    phone: values.phone ?? null,
-    shipping_addr_1: values.shipping_addr_1 ?? null,
-    shipping_addr_2: values.shipping_addr_2 ?? null,
-    postal_code: values.postal_code ?? null,
-    shopify_customer_id: values.shopify_customer_id ?? null,
-  });
+  const cleanupValues = (values: CustomerFormValues) => cleanupCustomerValues(values);
 
   const updateCustomer = async (cleanedValues: ReturnType<typeof cleanupValues>) => {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("customers")
+      // @ts-expect-error: Supabase RLS policy causing type inference issue
       .update(cleanedValues)
       .eq("customer_id", customer!.customer_id)
       .select()
       .single();
     if (error || !data) throw error ?? new Error("Failed to update customer");
-    return data as unknown as Customer;
+    return data as Customer;
   };
 
   const createCustomer = async (cleanedValues: ReturnType<typeof cleanupValues>) => {
-    const { data, error } = await (supabase as any).from("customers").insert(cleanedValues).select().single();
+    // @ts-expect-error: Supabase RLS policy causing type inference issue
+    const { data, error } = await supabase.from("customers").insert(cleanedValues).select().single();
     if (error || !data) throw error ?? new Error("Failed to create customer");
-    return data as unknown as Customer;
+    return data as Customer;
   };
 
   const onSubmit = async (values: CustomerFormValues) => {

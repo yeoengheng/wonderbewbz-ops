@@ -21,7 +21,7 @@ type OrderWithCustomer = Order & { customer: Customer; machine_runs?: MachineRun
 
 interface OrderColumnsProps {
   onEdit: (order: OrderWithCustomer) => void;
-  onMachineRunClick: (machineRun: MachineRun) => void;
+  onMachineRunClick: (machineRun: MachineRun, order: OrderWithCustomer) => void;
   onManageMachineRuns: (order: OrderWithCustomer) => void;
 }
 
@@ -68,7 +68,7 @@ export const createOrderColumns = ({
         completed: { label: "Completed", variant: "outline" as const },
       };
 
-      const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+      const config = statusConfig[status as keyof typeof statusConfig] ?? statusConfig.pending;
 
       return <Badge variant={config.variant}>{config.label}</Badge>;
     },
@@ -118,9 +118,9 @@ export const createOrderColumns = ({
                 variant="link"
                 size="sm"
                 className="h-auto p-0 font-medium text-blue-600 underline hover:text-blue-800"
-                onClick={() => onMachineRunClick(run)}
+                onClick={() => onMachineRunClick(run, order)}
               >
-                {run.run_number}-{String.fromCharCode(65 + index)}
+                {run.run_number}
               </Button>
               {index < machineRuns.length - 1 && <span className="text-muted-foreground ml-1">,</span>}
             </span>

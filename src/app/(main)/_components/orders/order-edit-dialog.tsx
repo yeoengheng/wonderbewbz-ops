@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createClient } from "@supabase/supabase-js";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -19,6 +18,8 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSupabase } from "@/hooks/use-supabase";
+import { cleanupOrderValues } from "@/lib/form-utils";
 import type { Order, Customer, MachineRun } from "@/types/database";
 
 type OrderWithCustomer = Order & { customer: Customer; machine_runs?: MachineRun[] };
@@ -45,9 +46,7 @@ interface OrderEditDialogProps {
 export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEditDialogProps) {
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
-
-  // Create Supabase client
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+  const { supabase, isLoaded } = useSupabase();
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -65,23 +64,24 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
   // Load customers for dropdown
   useEffect(() => {
     const loadCustomers = async () => {
+      if (!isLoaded) return;
       const { data } = await supabase.from("customers").select("*").order("name");
       setCustomers(data ?? []);
     };
 
-    if (open) {
+    if (open && isLoaded) {
       loadCustomers();
     }
-  }, [open, supabase]);
+  }, [open, supabase, isLoaded]);
 
   // Reset form when order changes or dialog opens
   useEffect(() => {
     if (open) {
       if (order) {
         form.reset({
-          shopify_order_id: order.shopify_order_id ?? "",
-          customer_id: order.customer_id ?? "",
-          status: (order.status as "pending" | "processing" | "completed") ?? "pending",
+          shopify_order_id: order.shopify_order_id,
+          customer_id: order.customer_id,
+          status: order.status as "pending" | "processing" | "completed",
           shipping_addr_1: order.shipping_addr_1 ?? "",
           shipping_addr_2: order.shipping_addr_2 ?? "",
           postal_code: order.postal_code ?? "",
@@ -102,22 +102,19 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
   }, [order, open, form]);
 
   const onSubmit = async (values: OrderFormValues) => {
+    if (!isLoaded) return;
+
     setLoading(true);
     try {
       // Clean up empty strings to null for optional fields
-      const cleanedValues = {
-        ...values,
-        shipping_addr_1: values.shipping_addr_1 ?? null,
-        shipping_addr_2: values.shipping_addr_2 ?? null,
-        postal_code: values.postal_code ?? null,
-        phone: values.phone ?? null,
-      };
+      const cleanedValues = cleanupOrderValues(values);
 
       if (order) {
         // Update existing order
         const { data: updatedOrder, error } = await supabase
           .from("orders")
-          .update(cleanedValues as any)
+          // @ts-expect-error: Supabase RLS policy causing type inference issue
+          .update(cleanedValues)
           .eq("order_id", order.order_id)
           .select(
             `
@@ -138,7 +135,8 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
         // Create new order
         const { data: newOrder, error } = await supabase
           .from("orders")
-          .insert(cleanedValues as any)
+          // @ts-expect-error: Supabase RLS policy causing type inference issue
+          .insert(cleanedValues)
           .select(
             `
             *,

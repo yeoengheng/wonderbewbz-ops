@@ -7,8 +7,6 @@ import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useSupabase } from "@/hooks/use-supabase";
 import type { Database } from "@/types/database";
 
@@ -26,11 +24,6 @@ interface MachineRunManagementDialogProps {
   onMachineRunClick?: (machineRun: MachineRun) => void;
 }
 
-interface EditableOrderInfo {
-  name: string;
-  phone: string;
-}
-
 export function MachineRunManagementDialog({
   order,
   open,
@@ -40,8 +33,7 @@ export function MachineRunManagementDialog({
   const [machineRuns, setMachineRuns] = useState<MachineRun[]>([]);
   const [loading, setLoading] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
-  const [editingOrder, setEditingOrder] = useState(false);
-  const [orderInfo, setOrderInfo] = useState<EditableOrderInfo>({ name: "", phone: "" });
+  const [editingMachineRun, setEditingMachineRun] = useState<MachineRun | null>(null);
   const { supabase, isLoaded } = useSupabase();
 
   const loadMachineRuns = useCallback(async () => {
@@ -60,7 +52,7 @@ export function MachineRunManagementDialog({
         return;
       }
 
-      setMachineRuns(data || []);
+      setMachineRuns(data ?? []);
     } catch (error) {
       console.error("Error loading machine runs:", error);
     } finally {
@@ -70,40 +62,23 @@ export function MachineRunManagementDialog({
 
   useEffect(() => {
     if (order) {
-      setOrderInfo({
-        name: order.customer.name,
-        phone: order.customer.phone ?? "",
-      });
       loadMachineRuns();
     }
   }, [order, isLoaded, loadMachineRuns]);
 
-  const handleSaveOrderInfo = async () => {
-    if (!order || !isLoaded) return;
-
-    try {
-      // For now, just update the local state
-      // TODO: Implement customer update with proper typing
-      setEditingOrder(false);
-    } catch (error) {
-      console.error("Error updating customer:", error);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setOrderInfo({
-      name: order?.customer.name ?? "",
-      phone: order?.customer.phone ?? "",
-    });
-    setEditingOrder(false);
-  };
-
   const handleAddMachineRun = () => {
+    setEditingMachineRun(null);
+    setIsWizardOpen(true);
+  };
+
+  const handleEditMachineRun = (machineRun: MachineRun) => {
+    setEditingMachineRun(machineRun);
     setIsWizardOpen(true);
   };
 
   const handleWizardComplete = () => {
     setIsWizardOpen(false);
+    setEditingMachineRun(null);
     loadMachineRuns();
   };
 
@@ -112,102 +87,40 @@ export function MachineRunManagementDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
+          <DialogHeader className="pb-6">
+            <DialogTitle className="text-2xl font-bold">Order: {order.shopify_order_id.slice(-8)}</DialogTitle>
+            <DialogDescription>Manage machine runs and order information</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="text-2xl font-bold">Order: {order.shopify_order_id.slice(-8)}</DialogTitle>
-                <DialogDescription>Manage machine runs and order information</DialogDescription>
-              </div>
-              <Button onClick={handleAddMachineRun} className="bg-blue-600 text-white hover:bg-blue-700">
+              <h3 className="text-lg font-semibold">Machine Runs</h3>
+              <Button onClick={handleAddMachineRun}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Runs
               </Button>
             </div>
-          </DialogHeader>
 
-          <div className="space-y-6">
-            {/* Order Info Section */}
-            <div className="bg-card rounded-lg border">
-              <div className="bg-muted/50 flex items-center justify-between border-b p-4">
-                <h3 className="text-sm font-medium">Order Information</h3>
-                {!editingOrder ? (
-                  <Button variant="outline" size="sm" onClick={() => setEditingOrder(true)}>
-                    Edit
-                  </Button>
-                ) : (
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={handleSaveOrderInfo}>
-                      Save
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleCancelEdit}>
-                      Cancel
-                    </Button>
-                  </div>
-                )}
+            {loading ? (
+              <div className="py-8 text-center">Loading machine runs...</div>
+            ) : machineRuns.length === 0 ? (
+              <div className="py-12 text-center">
+                <div className="text-muted-foreground">No runs yet</div>
               </div>
-              <div className="space-y-4 p-4">
-                {editingOrder ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="customer-name">Name</Label>
-                      <Input
-                        id="customer-name"
-                        value={orderInfo.name}
-                        onChange={(e) => setOrderInfo({ ...orderInfo, name: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="customer-phone">Phone</Label>
-                      <Input
-                        id="customer-phone"
-                        value={orderInfo.phone}
-                        onChange={(e) => setOrderInfo({ ...orderInfo, phone: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground text-sm">Name</span>
-                      <span className="text-sm font-medium">{orderInfo.name}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground text-sm">Phone</span>
-                      <span className="text-sm font-medium">{orderInfo.phone ?? "Not provided"}</span>
-                    </div>
-                  </div>
-                )}
+            ) : (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {machineRuns.map((run) => (
+                  <MachineRunCard
+                    key={run.machine_run_id}
+                    machineRun={run}
+                    runLabel={`${run.run_number}`}
+                    onClick={() => onMachineRunClick?.(run)}
+                    onEdit={() => handleEditMachineRun(run)}
+                  />
+                ))}
               </div>
-            </div>
-
-            {/* Machine Runs Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Machine Runs</h3>
-
-              {loading ? (
-                <div className="py-8 text-center">Loading machine runs...</div>
-              ) : machineRuns.length === 0 ? (
-                <div className="space-y-4 py-12 text-center">
-                  <div className="text-muted-foreground">No runs yet</div>
-                  <Button onClick={handleAddMachineRun} className="bg-blue-600 text-white hover:bg-blue-700">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Runs
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {machineRuns.map((run, index) => (
-                    <MachineRunCard
-                      key={run.machine_run_id}
-                      machineRun={run}
-                      runLabel={`${run.run_number}-${String.fromCharCode(65 + index)}`}
-                      onClick={() => onMachineRunClick?.(run)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -217,6 +130,7 @@ export function MachineRunManagementDialog({
         onOpenChange={setIsWizardOpen}
         order={order}
         onComplete={handleWizardComplete}
+        editingMachineRun={editingMachineRun}
       />
     </>
   );
@@ -226,9 +140,10 @@ interface MachineRunCardProps {
   machineRun: MachineRun;
   runLabel: string;
   onClick: () => void;
+  onEdit: () => void;
 }
 
-function MachineRunCard({ machineRun, runLabel, onClick }: MachineRunCardProps) {
+function MachineRunCard({ machineRun, runLabel, onClick, onEdit }: MachineRunCardProps) {
   const statusConfig = {
     pending: { label: "Pending", variant: "secondary" as const },
     processing: { label: "In progress", variant: "default" as const },
@@ -248,7 +163,14 @@ function MachineRunCard({ machineRun, runLabel, onClick }: MachineRunCardProps) 
         <h4 className="text-lg font-semibold">{runLabel}</h4>
         <div className="flex gap-2">
           <Badge variant={status.variant}>{status.label}</Badge>
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+          >
             Edit
           </Button>
         </div>

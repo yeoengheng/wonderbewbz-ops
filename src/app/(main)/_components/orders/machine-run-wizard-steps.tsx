@@ -75,16 +75,18 @@ export function Step1({ data, updateData }: { data: WizardData; updateData: (upd
 
 export function Step2({
   data,
-  addBag,
+  addBagToDate,
   updateBag,
   removeBag,
   addDateGroup,
+  updateDateGroupDate,
 }: {
   data: WizardData;
-  addBag: () => void;
+  addBagToDate: (date: string) => void;
   updateBag: (id: string, field: keyof Omit<IndividualBag, "id">, value: string) => void;
   removeBag: (id: string) => void;
   addDateGroup: () => void;
+  updateDateGroupDate: (oldDate: string, newDate: string) => void;
 }) {
   // Group bags by date
   const bagsByDate = data.bags.reduce(
@@ -101,77 +103,68 @@ export function Step2({
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="mb-2 text-lg font-semibold">Individual Bags</h3>
-        <p className="text-muted-foreground text-sm">Track individual bags with dates and weights</p>
+        <p className="text-muted-foreground text-sm">Group bags by date and add weights for each bag</p>
       </div>
 
       <div className="space-y-6">
-        {Object.entries(bagsByDate).map(([date, bags]) => (
-          <div key={date} className="space-y-3">
-            {date !== "unassigned" && (
-              <div className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
-                <Calendar className="h-4 w-4" />
-                {date}
+        {/* Date Groups */}
+        {Object.entries(bagsByDate)
+          .filter(([date]) => date !== "unassigned")
+          .map(([date, bags]) => (
+            <div key={date} className="space-y-3">
+              {/* Date Header */}
+              <div className="flex items-center gap-2">
+                <Calendar className="text-muted-foreground h-4 w-4" />
+                <Input
+                  type="date"
+                  value={date}
+                  onChange={(e) => updateDateGroupDate(date, e.target.value)}
+                  className="w-auto"
+                />
               </div>
-            )}
 
-            <div className="space-y-2">
-              {bags.map((bag) => (
-                <div key={bag.id} className="flex items-end gap-2">
-                  <div className="flex-1">
-                    <Label htmlFor={`date-${bag.id}`}>Date</Label>
+              {/* Bags for this date */}
+              <div className="grid grid-cols-2 gap-2">
+                {bags.map((bag) => (
+                  <div key={bag.id} className="flex items-center gap-2">
                     <Input
-                      id={`date-${bag.id}`}
-                      type="date"
-                      value={bag.date}
-                      onChange={(e) => updateBag(bag.id, "date", e.target.value)}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Label htmlFor={`weight-${bag.id}`}>Weight (g)</Label>
-                    <Input
-                      id={`weight-${bag.id}`}
                       type="number"
                       placeholder="5g"
                       value={bag.weight}
                       onChange={(e) => updateBag(bag.id, "weight", e.target.value)}
+                      className="flex-1"
                     />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeBag(bag.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeBag(bag.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
-            {date !== "unassigned" && (
-              <Button variant="outline" size="sm" onClick={addBag} className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Bag
+              {/* Add Bag button for this date */}
+              <Button variant="outline" size="sm" onClick={() => addBagToDate(date)} className="w-full">
+                <Plus className="mr-2 h-4 w-4" />+ Bag
               </Button>
-            )}
-          </div>
-        ))}
+            </div>
+          ))}
 
+        {/* Add Date Group button */}
+        <Button variant="outline" onClick={addDateGroup} className="w-full">
+          Add Date
+        </Button>
+
+        {/* Empty state */}
         {data.bags.length === 0 && (
           <div className="py-8 text-center">
-            <p className="text-muted-foreground mb-4">No bags added yet</p>
-            <Button onClick={addBag}>
+            <p className="text-muted-foreground mb-4">No date groups added yet</p>
+            <Button onClick={addDateGroup}>
               <Plus className="mr-2 h-4 w-4" />
-              Add First Bag
-            </Button>
-          </div>
-        )}
-
-        {data.bags.length > 0 && (
-          <div className="border-t pt-4">
-            <Button variant="outline" onClick={addDateGroup} className="w-full">
-              <Calendar className="mr-2 h-4 w-4" />
-              Add Date Group
+              Add Date
             </Button>
           </div>
         )}

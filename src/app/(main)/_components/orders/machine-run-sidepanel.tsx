@@ -22,6 +22,7 @@ interface MachineRunSidepanelProps {
   machineRun: MachineRun | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  allMachineRuns?: MachineRun[];
 }
 
 const statusConfig = {
@@ -179,12 +180,18 @@ function IndividualBagsSection() {
   );
 }
 
-export function MachineRunSidepanel({ machineRun, open, onOpenChange }: MachineRunSidepanelProps) {
+export function MachineRunSidepanel({
+  machineRun,
+  open,
+  onOpenChange,
+}: Omit<MachineRunSidepanelProps, "allMachineRuns">) {
   const isMobile = useIsMobile();
 
   if (!machineRun) return null;
 
   const status = statusConfig[machineRun.status as keyof typeof statusConfig];
+
+  const runLabel = `${machineRun.run_number}`;
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction={isMobile ? "bottom" : "right"}>
@@ -193,7 +200,7 @@ export function MachineRunSidepanel({ machineRun, open, onOpenChange }: MachineR
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <DrawerTitle className="text-2xl font-bold tracking-tight">{machineRun.run_number}-A</DrawerTitle>
+                <DrawerTitle className="text-2xl font-bold tracking-tight">{runLabel}</DrawerTitle>
                 <Badge variant={status.variant} className="px-3 py-1 text-sm">
                   {status.label}
                 </Badge>
