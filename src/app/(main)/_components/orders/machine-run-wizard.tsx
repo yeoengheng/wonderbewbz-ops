@@ -48,7 +48,9 @@ const machineRunSchema = z.object({
   mamaName: z.string().min(1, "Mama's name is required"),
   mamaNric: z.string().min(1, "Mama's NRIC is required"),
   dateExpressed: z.string().min(1, "Date expressed is required"),
+  runNumber: z.string(),
   machineRun: z.string(),
+  status: z.string(),
   dateProcessed: z.string(),
   datePacked: z.string(),
 
@@ -70,7 +72,9 @@ const initialData: WizardData = {
   mamaName: "",
   mamaNric: "",
   dateExpressed: "",
+  runNumber: "",
   machineRun: "",
+  status: "pending",
   dateProcessed: "",
   datePacked: "",
   bags: [],
@@ -86,6 +90,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [bagCounter, setBagCounter] = useState(0);
+  const [initialized, setInitialized] = useState(false);
   const { supabase, isLoaded } = useSupabase();
 
   const form = useForm<WizardData>({
@@ -105,7 +110,9 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     mamaName: mr.mama_name ?? "",
     mamaNric: mr.mama_nric ?? "",
     dateExpressed: mr.date_received ?? "",
-    machineRun: mr.run_number?.toString() ?? "",
+    runNumber: mr.run_number?.toString() ?? "",
+    machineRun: "", // This will be used for the new Machine field
+    status: mr.status ?? "pending",
     dateProcessed: mr.date_processed ?? "",
     datePacked: mr.date_packed ?? "",
   });
@@ -180,8 +187,9 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   // Pre-populate form when editing
   useEffect(() => {
     const handleDialogOpen = async () => {
-      if (open) {
+      if (open && isLoaded && !initialized) {
         setCurrentStep(1);
+        setInitialized(true);
 
         if (editingMachineRun) {
           populateFormFields(editingMachineRun);
@@ -190,11 +198,14 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
           form.reset(initialData);
           setBagCounter(0);
         }
+      } else if (!open && initialized) {
+        // Reset initialized state when dialog closes
+        setInitialized(false);
       }
     };
 
     handleDialogOpen();
-  }, [editingMachineRun, open, populateFormFields, loadIndividualBags, form]);
+  }, [open, isLoaded, initialized, editingMachineRun?.machine_run_id]); // Only depend on stable values
 
   const updateData = (updates: Partial<WizardData>) => {
     Object.entries(updates).forEach(([key, value]) => {
@@ -229,7 +240,17 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
 
   const addDateGroup = () => {
     const today = new Date().toISOString().split("T")[0];
-    addBagToDate(today);
+    // Find a unique date that doesn't already exist
+    let newDate = today;
+    let counter = 1;
+    while (data.bags.some((bag) => bag.date === newDate)) {
+      const date = new Date(today);
+      date.setDate(date.getDate() + counter);
+      newDate = date.toISOString().split("T")[0];
+      counter++;
+    }
+    // Add first bag to the new date group (a date group needs at least one bag)
+    addBagToDate(newDate);
   };
 
   const canProceed = () => {
@@ -273,7 +294,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     const insertData = {
       order_id: order.order_id,
       run_number: runNumber,
-      status: "pending" as const,
+      status: data.status as "pending" | "processing" | "completed" | "qa_failed" | "cancelled",
       mama_name: data.mamaName,
       mama_nric: data.mamaNric,
       date_received: data.dateExpressed,
@@ -301,6 +322,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
 
   const updateMachineRun = async (machineRunId: string) => {
     const updateData = {
+      status: data.status as "pending" | "processing" | "completed" | "qa_failed" | "cancelled",
       mama_name: data.mamaName,
       mama_nric: data.mamaNric,
       date_received: data.dateExpressed,
@@ -370,6 +392,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       form.reset(initialData);
       setCurrentStep(1);
       setBagCounter(0);
+      setInitialized(false);
       onComplete();
     } catch (error) {
       console.error("Error saving machine run:", error);
@@ -382,12 +405,13 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     form.reset(initialData);
     setCurrentStep(1);
     setBagCounter(0);
+    setInitialized(false);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-2xl md:max-w-4xl lg:max-w-6xl">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold">

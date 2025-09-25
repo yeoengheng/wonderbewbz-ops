@@ -22,6 +22,7 @@ interface MachineRunManagementDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onMachineRunClick?: (machineRun: MachineRun) => void;
+  onMachineRunsUpdated?: () => void;
 }
 
 export function MachineRunManagementDialog({
@@ -29,6 +30,7 @@ export function MachineRunManagementDialog({
   open,
   onOpenChange,
   onMachineRunClick,
+  onMachineRunsUpdated,
 }: MachineRunManagementDialogProps) {
   const [machineRuns, setMachineRuns] = useState<MachineRun[]>([]);
   const [loading, setLoading] = useState(false);
@@ -61,10 +63,10 @@ export function MachineRunManagementDialog({
   }, [order, isLoaded, supabase]);
 
   useEffect(() => {
-    if (order) {
+    if (order && isLoaded) {
       loadMachineRuns();
     }
-  }, [order, isLoaded, loadMachineRuns]);
+  }, [order?.order_id, isLoaded]); // Only depend on order ID and isLoaded, not the entire loadMachineRuns callback
 
   const handleAddMachineRun = () => {
     setEditingMachineRun(null);
@@ -80,6 +82,7 @@ export function MachineRunManagementDialog({
     setIsWizardOpen(false);
     setEditingMachineRun(null);
     loadMachineRuns();
+    onMachineRunsUpdated?.(); // Notify parent to refresh orders data
   };
 
   if (!order) return null;

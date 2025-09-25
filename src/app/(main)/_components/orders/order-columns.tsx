@@ -44,16 +44,11 @@ export const createOrderColumns = ({
     },
   },
   {
-    id: "customer",
+    accessorKey: "customer.name",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Customer" />,
     cell: ({ row }) => {
       const order = row.original;
-      return (
-        <div>
-          <div className="font-medium">{order.customer.name}</div>
-          <div className="text-muted-foreground text-sm">{order.customer.phone ?? "No phone"}</div>
-        </div>
-      );
+      return <div className="font-medium">{order.customer.name}</div>;
     },
   },
   {
@@ -81,7 +76,7 @@ export const createOrderColumns = ({
       const address = [order.shipping_addr_1, order.shipping_addr_2, order.postal_code].filter(Boolean).join(", ");
 
       return (
-        <div className="max-w-[300px]">
+        <div className="max-w-[300px] truncate" title={address || "No address"}>
           {address ? address : <span className="text-muted-foreground italic">No address</span>}
         </div>
       );

@@ -34,13 +34,13 @@ export const getPowerToPackPerMl = (data: WizardData): string => {
 export const getPackedPowderWeight = (data: WizardData): string => {
   const waterToAdd = parseFloat(data.waterToAdd) || 0;
   const powerToPackPerMl = parseFloat(getPowerToPackPerMl(data));
-  return (waterToAdd * powerToPackPerMl).toFixed(1);
+  return (waterToAdd * powerToPackPerMl).toFixed(2);
 };
 
 export const getPackingTotal = (data: WizardData): string => {
   const packedPowderWeight = parseFloat(getPackedPowderWeight(data));
   const waterToAdd = parseFloat(data.waterToAdd) || 0;
-  return (packedPowderWeight + waterToAdd).toFixed(1);
+  return (packedPowderWeight + waterToAdd).toFixed(2);
 };
 
 export const getWaterContentPercentage = (data: WizardData): string => {
@@ -66,17 +66,17 @@ export const getWaterToAddPerUnit = (data: WizardData): string => {
 export const getGramRatioPackedPowderWeight = (data: WizardData): string => {
   const powderPerUnit = parseFloat(getPowderPerUnit(data));
   const staffInput = parseFloat(data.gramRatioStaffInput) || 0;
-  return (powderPerUnit * staffInput).toFixed(1);
+  return (powderPerUnit * staffInput).toFixed(2);
 };
 
 export const getGramRatioWaterToAdd = (data: WizardData): string => {
   const waterToAddPerUnit = parseFloat(getWaterToAddPerUnit(data));
   const staffInput = parseFloat(data.gramRatioStaffInput) || 0;
-  return (waterToAddPerUnit * staffInput).toFixed(1);
+  return (waterToAddPerUnit * staffInput).toFixed(2);
 };
 
 export const getGramRatioPackingTotal = (data: WizardData): string => {
   const packedPowderWeight = parseFloat(getGramRatioPackedPowderWeight(data));
   const waterToAdd = parseFloat(getGramRatioWaterToAdd(data));
-  return (packedPowderWeight + waterToAdd).toFixed(1);
+  return (packedPowderWeight + waterToAdd).toFixed(2);
 };

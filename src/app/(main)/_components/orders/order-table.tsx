@@ -11,6 +11,7 @@ import type { Database } from "@/types/database";
 
 import { MachineRunManagementDialog } from "./machine-run-management-dialog";
 import { MachineRunSidepanel } from "./machine-run-sidepanel";
+import { MachineRunWizard } from "./machine-run-wizard";
 import { createOrderColumns } from "./order-columns";
 import { OrderEditDialog } from "./order-edit-dialog";
 
@@ -30,6 +31,8 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedMachineRun, setSelectedMachineRun] = useState<MachineRun | null>(null);
   const [isSidepanelOpen, setIsSidepanelOpen] = useState(false);
+  const [editingMachineRun, setEditingMachineRun] = useState<MachineRun | null>(null);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [selectedOrderForMachineRuns, setSelectedOrderForMachineRuns] = useState<OrderWithCustomer | null>(null);
   const [isMachineRunDialogOpen, setIsMachineRunDialogOpen] = useState(false);
   const { supabase, isLoaded } = useSupabase();
@@ -84,8 +87,10 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
   }, [isLoaded, supabase]);
 
   useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+    if (isLoaded) {
+      loadOrders();
+    }
+  }, [isLoaded]); // Only depend on isLoaded, not the entire loadOrders callback
 
   const handleCreateOrder = () => {
     setSelectedOrder(null);
@@ -102,6 +107,32 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
     }
     setIsEditDialogOpen(false);
     setSelectedOrder(null);
+  };
+
+  const handleMachineRunsUpdated = () => {
+    // Refresh the orders data when machine runs are updated
+    loadOrders();
+  };
+
+  const handleSidepanelEdit = (machineRun: MachineRun) => {
+    // Find the order that contains this machine run
+    const orderWithMachineRun = data.find((order) =>
+      order.machine_runs?.some((mr) => mr.machine_run_id === machineRun.machine_run_id),
+    );
+
+    if (orderWithMachineRun) {
+      setSelectedOrderForMachineRuns(orderWithMachineRun);
+      setEditingMachineRun(machineRun);
+      setIsWizardOpen(true);
+      setIsSidepanelOpen(false); // Close the side panel
+    }
+  };
+
+  const handleWizardComplete = () => {
+    setIsWizardOpen(false);
+    setEditingMachineRun(null);
+    setSelectedOrderForMachineRuns(null);
+    loadOrders(); // Refresh data
   };
 
   return (
@@ -132,7 +163,12 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
         onSaved={handleOrderSaved}
       />
 
-      <MachineRunSidepanel machineRun={selectedMachineRun} open={isSidepanelOpen} onOpenChange={setIsSidepanelOpen} />
+      <MachineRunSidepanel
+        machineRun={selectedMachineRun}
+        open={isSidepanelOpen}
+        onOpenChange={setIsSidepanelOpen}
+        onEditClick={handleSidepanelEdit}
+      />
 
       <MachineRunManagementDialog
         order={selectedOrderForMachineRuns}
@@ -142,6 +178,15 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
           setSelectedMachineRun(machineRun);
           setIsSidepanelOpen(true);
         }}
+        onMachineRunsUpdated={handleMachineRunsUpdated}
+      />
+
+      <MachineRunWizard
+        open={isWizardOpen}
+        onOpenChange={setIsWizardOpen}
+        order={selectedOrderForMachineRuns!}
+        onComplete={handleWizardComplete}
+        editingMachineRun={editingMachineRun}
       />
     </div>
   );

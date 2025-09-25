@@ -24,6 +24,7 @@ interface MachineRunSidepanelProps {
   machineRun: MachineRun | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEditClick?: (machineRun: MachineRun) => void;
   allMachineRuns?: MachineRun[];
 }
 
@@ -156,6 +157,7 @@ export function MachineRunSidepanel({
   machineRun,
   open,
   onOpenChange,
+  onEditClick,
 }: Omit<MachineRunSidepanelProps, "allMachineRuns">) {
   const isMobile = useIsMobile();
 
@@ -185,7 +187,7 @@ export function MachineRunSidepanel({
               <Button
                 size="sm"
                 variant="default"
-                onClick={() => {}}
+                onClick={() => onEditClick?.(machineRun)}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Edit className="mr-2 h-4 w-4" />
@@ -229,7 +231,7 @@ export function MachineRunSidepanel({
         {/* Footer with action buttons */}
         <DrawerFooter>
           {isMobile && (
-            <Button onClick={() => {}} className="bg-blue-600 text-white hover:bg-blue-700">
+            <Button onClick={() => onEditClick?.(machineRun)} className="bg-blue-600 text-white hover:bg-blue-700">
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </Button>

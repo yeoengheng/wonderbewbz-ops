@@ -4,6 +4,7 @@ import { Beaker } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { IndividualBagsSection } from "./individual-bags-section";
 import { MachineRunOutputs } from "./machine-run-outputs";
@@ -19,7 +20,9 @@ interface WizardData {
   mamaName: string;
   mamaNric: string;
   dateExpressed: string;
+  runNumber: string;
   machineRun: string;
+  status: string;
   dateProcessed: string;
   datePacked: string;
 
@@ -46,13 +49,37 @@ export function Step1({ data, updateData }: { data: WizardData; updateData: (upd
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div className="mx-auto w-full max-w-md space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="machine-run">Machine Run</Label>
+            <Label htmlFor="run-number">Batch Number</Label>
             <Input
-              id="machine-run"
-              placeholder="Enter machine run"
+              id="run-number"
+              placeholder="Enter batch number"
+              value={data.runNumber}
+              onChange={(e) => updateData({ runNumber: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="machine">Machine</Label>
+            <Input
+              id="machine"
+              placeholder="Enter machine"
               value={data.machineRun}
               onChange={(e) => updateData({ machineRun: e.target.value })}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select value={data.status} onValueChange={(value) => updateData({ status: value })}>
+              <SelectTrigger id="status">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="processing">In progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="qa_failed">QA Failed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="mama-name">Mama&apos;s Name</Label>
