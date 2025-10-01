@@ -38,7 +38,7 @@ export const createOrderColumns = ({
       return (
         <div className="flex items-center space-x-2">
           <Package className="text-muted-foreground h-4 w-4" />
-          <span className="font-mono text-sm font-medium">#{String(orderId).slice(-8)}</span>
+          <span className="font-mono text-sm font-medium">{String(orderId)}</span>
         </div>
       );
     },
