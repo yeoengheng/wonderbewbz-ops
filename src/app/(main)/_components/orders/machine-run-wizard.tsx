@@ -256,7 +256,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return data.mamaName.trim() && data.mamaNric.trim() && data.dateExpressed;
+        return data.mamaName.trim() && data.mamaNric.trim();
       case 2:
         return data.bags.length > 0 && data.bags.every((bag) => bag.date && bag.weight);
       case 3:
