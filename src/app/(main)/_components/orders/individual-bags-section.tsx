@@ -1,4 +1,4 @@
-import { Calendar, Plus, Trash2 } from "lucide-react";
+import { Calendar, Plus, Trash2, AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,11 @@ interface IndividualBag {
   date: string;
   weight: string;
 }
+
+const isWeightOutOfRange = (weight: string): boolean => {
+  const weightNum = parseFloat(weight);
+  return !isNaN(weightNum) && weightNum > 0 && (weightNum < 30 || weightNum > 400);
+};
 
 interface WizardData {
   bags: IndividualBag[];
@@ -70,30 +75,41 @@ export function IndividualBagsSection({
                 <CardContent className="space-y-1 pb-8">
                   {/* Bags for this date */}
                   <div className="grid grid-cols-2 gap-3">
-                    {bags.map((bag) => (
-                      <div key={bag.id} className="flex items-center gap-2">
-                        <div className="relative flex-1">
-                          <Input
-                            type="number"
-                            placeholder="5"
-                            value={bag.weight}
-                            onChange={(e) => updateBag(bag.id, "weight", e.target.value)}
-                            className="pr-6"
-                          />
-                          <span className="text-muted-foreground absolute top-1/2 right-2 -translate-y-1/2 text-sm">
-                            g
-                          </span>
+                    {bags.map((bag) => {
+                      const outOfRange = isWeightOutOfRange(bag.weight);
+                      return (
+                        <div key={bag.id} className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                value={bag.weight}
+                                onChange={(e) => updateBag(bag.id, "weight", e.target.value)}
+                                className={`pr-6 ${outOfRange ? "border-yellow-500" : ""}`}
+                              />
+                              <span className="text-muted-foreground absolute top-1/2 right-2 -translate-y-1/2 text-sm">
+                                g
+                              </span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeBag(bag.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {outOfRange && (
+                            <div className="flex items-center gap-1 text-xs text-yellow-600">
+                              <AlertTriangle className="h-3 w-3" />
+                              <span>Are you sure? (Expected: 30-400g)</span>
+                            </div>
+                          )}
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeBag(bag.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Add Bag button for this date */}

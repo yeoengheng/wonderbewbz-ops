@@ -29,6 +29,7 @@ interface DataTableWrapperProps<TData, TValue> {
   searchPlaceholder?: string;
   dndEnabled?: boolean;
   onReorder?: (newData: TData[]) => void;
+  enableRowSelection?: boolean;
 }
 
 export function DataTableWrapper<TData, TValue>({
@@ -39,6 +40,7 @@ export function DataTableWrapper<TData, TValue>({
   searchPlaceholder = "Search...",
   dndEnabled = false,
   onReorder,
+  enableRowSelection = false,
 }: DataTableWrapperProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -84,7 +86,7 @@ export function DataTableWrapper<TData, TValue>({
       <div className="rounded-md border">
         <DataTable table={table} columns={columns} dndEnabled={dndEnabled} onReorder={onReorder} />
       </div>
-      <DataTablePagination table={table} />
+      <DataTablePagination table={table} showRowSelection={enableRowSelection} />
     </div>
   );
 }

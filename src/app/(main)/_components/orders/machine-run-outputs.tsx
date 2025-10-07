@@ -9,9 +9,6 @@ import {
   getPackingTotal,
   getPackedPowderWeight,
   getWaterContentPercentage,
-  getPowerToPackPerMl,
-  getPowderPerUnit,
-  getWaterToAddPerUnit,
   getGramRatioPackingTotal,
   getGramRatioPackedPowderWeight,
   getGramRatioWaterToAdd,
@@ -57,27 +54,15 @@ export function MachineRunOutputs({ data }: MachineRunOutputsProps) {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Packing total:</span>
-            <span className="font-mono">{getPackingTotal(data)} ml</span>
+            <span className="font-mono font-bold">{getPackingTotal(data)} ml</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Packed powder weight:</span>
-            <span className="font-mono">{getPackedPowderWeight(data)} g</span>
+            <span className="font-mono font-bold text-blue-600">{getPackedPowderWeight(data)} g</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Breastmilk water content:</span>
             <span className="font-mono">{getWaterContentPercentage(data)}%</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Power to pack per ml:</span>
-            <span className="font-mono">{getPowerToPackPerMl(data)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Powder per unit:</span>
-            <span className="font-mono">{getPowderPerUnit(data)} g</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Water to add per unit:</span>
-            <span className="font-mono">{getWaterToAddPerUnit(data)} g</span>
           </div>
         </CardContent>
       </Card>

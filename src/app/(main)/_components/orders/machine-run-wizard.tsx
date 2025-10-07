@@ -53,6 +53,7 @@ const machineRunSchema = z.object({
   status: z.string(),
   dateProcessed: z.string(),
   datePacked: z.string(),
+  remarks: z.string(),
 
   // Step 2: Individual Bags
   bags: z.array(individualBagSchema).min(1, "At least one bag is required"),
@@ -77,6 +78,7 @@ const initialData: WizardData = {
   status: "pending",
   dateProcessed: "",
   datePacked: "",
+  remarks: "",
   bags: [],
   bagsWeight: "",
   powderWeight: "",
@@ -115,6 +117,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     status: mr.status ?? "pending",
     dateProcessed: mr.date_processed ?? "",
     datePacked: mr.date_packed ?? "",
+    remarks: mr.remarks ?? "",
   });
 
   const getWeightData = (mr: MachineRun) => ({
@@ -205,6 +208,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     };
 
     handleDialogOpen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, isLoaded, initialized, editingMachineRun?.machine_run_id]); // Only depend on stable values
 
   const updateData = (updates: Partial<WizardData>) => {
@@ -239,16 +243,24 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   };
 
   const addDateGroup = () => {
-    const today = new Date().toISOString().split("T")[0];
-    // Find a unique date that doesn't already exist
-    let newDate = today;
-    let counter = 1;
-    while (data.bags.some((bag) => bag.date === newDate)) {
-      const date = new Date(today);
-      date.setDate(date.getDate() + counter);
-      newDate = date.toISOString().split("T")[0];
-      counter++;
+    let newDate: string;
+
+    if (data.bags.length === 0) {
+      // If no bags exist, use today's date
+      newDate = new Date().toISOString().split("T")[0];
+    } else {
+      // Find the latest date among all bags
+      const allDates = data.bags.map((bag) => bag.date).filter((date) => date);
+      const latestDate = allDates.reduce((latest, current) => {
+        return new Date(current) > new Date(latest) ? current : latest;
+      }, allDates[0]);
+
+      // Add 1 day to the latest date
+      const nextDate = new Date(latestDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+      newDate = nextDate.toISOString().split("T")[0];
     }
+
     // Add first bag to the new date group (a date group needs at least one bag)
     addBagToDate(newDate);
   };
@@ -290,22 +302,27 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     return existingRuns && existingRuns.length > 0 ? (existingRuns[0] as { run_number: number }).run_number + 1 : 1;
   };
 
+  const buildMachineRunData = () => ({
+    status: data.status as "pending" | "processing" | "completed" | "qa_failed" | "cancelled",
+    mama_name: data.mamaName,
+    mama_nric: data.mamaNric,
+    date_received: data.dateExpressed,
+    date_processed: data.dateProcessed || undefined,
+    date_packed: data.datePacked || undefined,
+    remarks: data.remarks || undefined,
+    bags_weight_g: data.bagsWeight ? parseFloat(data.bagsWeight) : undefined,
+    powder_weight_g: data.powderWeight ? parseFloat(data.powderWeight) : undefined,
+    packing_requirements_ml: data.packingRequirements ? parseFloat(data.packingRequirements) : undefined,
+    label_water_to_add_ml: data.waterToAdd ? parseFloat(data.waterToAdd) : undefined,
+    water_activity_level: data.waterActivityLevel ? parseFloat(data.waterActivityLevel) : undefined,
+    gram_ratio_staff_input_ml: data.gramRatioStaffInput ? parseFloat(data.gramRatioStaffInput) : undefined,
+  });
+
   const createMachineRun = async (runNumber: number) => {
     const insertData = {
       order_id: order.order_id,
       run_number: runNumber,
-      status: data.status as "pending" | "processing" | "completed" | "qa_failed" | "cancelled",
-      mama_name: data.mamaName,
-      mama_nric: data.mamaNric,
-      date_received: data.dateExpressed,
-      date_processed: data.dateProcessed || undefined,
-      date_packed: data.datePacked || undefined,
-      bags_weight_g: data.bagsWeight ? parseFloat(data.bagsWeight) : undefined,
-      powder_weight_g: data.powderWeight ? parseFloat(data.powderWeight) : undefined,
-      packing_requirements_ml: data.packingRequirements ? parseFloat(data.packingRequirements) : undefined,
-      label_water_to_add_ml: data.waterToAdd ? parseFloat(data.waterToAdd) : undefined,
-      water_activity_level: data.waterActivityLevel ? parseFloat(data.waterActivityLevel) : undefined,
-      gram_ratio_staff_input_ml: data.gramRatioStaffInput ? parseFloat(data.gramRatioStaffInput) : undefined,
+      ...buildMachineRunData(),
       user_id: order.user_id,
     };
 
@@ -322,18 +339,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
 
   const updateMachineRun = async (machineRunId: string) => {
     const updateData = {
-      status: data.status as "pending" | "processing" | "completed" | "qa_failed" | "cancelled",
-      mama_name: data.mamaName,
-      mama_nric: data.mamaNric,
-      date_received: data.dateExpressed,
-      date_processed: data.dateProcessed || undefined,
-      date_packed: data.datePacked || undefined,
-      bags_weight_g: data.bagsWeight ? parseFloat(data.bagsWeight) : undefined,
-      powder_weight_g: data.powderWeight ? parseFloat(data.powderWeight) : undefined,
-      packing_requirements_ml: data.packingRequirements ? parseFloat(data.packingRequirements) : undefined,
-      label_water_to_add_ml: data.waterToAdd ? parseFloat(data.waterToAdd) : undefined,
-      water_activity_level: data.waterActivityLevel ? parseFloat(data.waterActivityLevel) : undefined,
-      gram_ratio_staff_input_ml: data.gramRatioStaffInput ? parseFloat(data.gramRatioStaffInput) : undefined,
+      ...buildMachineRunData(),
       updated_at: new Date().toISOString(),
     };
 

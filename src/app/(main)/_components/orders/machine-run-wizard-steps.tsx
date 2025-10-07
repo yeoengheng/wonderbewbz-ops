@@ -5,6 +5,7 @@ import { Beaker } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 import { IndividualBagsSection } from "./individual-bags-section";
 import { MachineRunOutputs } from "./machine-run-outputs";
@@ -25,6 +26,7 @@ interface WizardData {
   status: string;
   dateProcessed: string;
   datePacked: string;
+  remarks: string;
 
   // Step 2: Individual Bags
   bags: IndividualBag[];
@@ -124,6 +126,16 @@ export function Step1({ data, updateData }: { data: WizardData; updateData: (upd
               type="date"
               value={data.datePacked}
               onChange={(e) => updateData({ datePacked: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="remarks">Remarks</Label>
+            <Textarea
+              id="remarks"
+              placeholder="Enter any additional remarks"
+              value={data.remarks}
+              onChange={(e) => updateData({ remarks: e.target.value })}
+              rows={3}
             />
           </div>
         </div>
