@@ -1,4 +1,4 @@
-import { Calculator, Beaker } from "lucide-react";
+import { Calculator, Beaker, AlertTriangle } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -27,6 +27,10 @@ interface MachineRunOutputsProps {
 }
 
 export function MachineRunOutputs({ data }: MachineRunOutputsProps) {
+  const waterContentPercentage = parseFloat(getWaterContentPercentage(data));
+  const isWaterContentOutOfRange =
+    !isNaN(waterContentPercentage) && (waterContentPercentage < 85 || waterContentPercentage > 89.5);
+
   return (
     <div className="space-y-4">
       <h4 className="font-medium">Outputs</h4>
@@ -60,9 +64,19 @@ export function MachineRunOutputs({ data }: MachineRunOutputsProps) {
             <span className="text-muted-foreground">Packed powder weight:</span>
             <span className="font-mono font-bold text-blue-600">{getPackedPowderWeight(data)} g</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Breastmilk water content:</span>
-            <span className="font-mono">{getWaterContentPercentage(data)}%</span>
+          <div className="space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Breastmilk water content:</span>
+              <span className={`font-mono ${isWaterContentOutOfRange ? "font-semibold text-yellow-600" : ""}`}>
+                {getWaterContentPercentage(data)}%
+              </span>
+            </div>
+            {isWaterContentOutOfRange && (
+              <div className="flex items-center gap-1 text-xs text-yellow-600">
+                <AlertTriangle className="h-3 w-3" />
+                <span>Are you sure? (Expected: 85-89.5%)</span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -75,11 +75,10 @@ export function Step1({ data, updateData }: { data: WizardData; updateData: (upd
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="processing">In progress</SelectItem>
+                <SelectItem value="pending">Milk arrived</SelectItem>
+                <SelectItem value="documented">Documented</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="qa_failed">QA Failed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -29,11 +29,12 @@ interface MachineRunSidepanelProps {
 }
 
 const statusConfig = {
-  pending: { label: "Pending", variant: "secondary" as const },
-  processing: { label: "In progress", variant: "default" as const },
-  completed: { label: "Completed", variant: "outline" as const },
-  qa_failed: { label: "QA Failed", variant: "destructive" as const },
-  cancelled: { label: "Cancelled", variant: "secondary" as const },
+  pending: { label: "Milk arrived", className: "bg-purple-100 text-purple-700 hover:bg-purple-100" },
+  documented: { label: "Documented", className: "bg-blue-100 text-blue-700 hover:bg-blue-100" },
+  processing: { label: "Processing", className: "bg-red-100 text-red-700 hover:bg-red-100" },
+  completed: { label: "Completed", className: "bg-green-100 text-green-700 hover:bg-green-100" },
+  qa_failed: { label: "QA Failed", className: "bg-gray-100 text-gray-700 hover:bg-gray-100" },
+  cancelled: { label: "Cancelled", className: "bg-gray-100 text-gray-700 hover:bg-gray-100" },
 };
 
 function OrderInfoSection({ machineRun }: { machineRun: MachineRun }) {
@@ -175,9 +176,7 @@ export function MachineRunSidepanel({
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <DrawerTitle className="text-2xl font-bold tracking-tight">{runLabel}</DrawerTitle>
-                <Badge variant={status.variant} className="px-3 py-1 text-sm">
-                  {status.label}
-                </Badge>
+                <Badge className={`px-3 py-1 text-sm ${status.className}`}>{status.label}</Badge>
               </div>
               <DrawerDescription className="text-muted-foreground">
                 Machine Run Details • Last updated {new Date(machineRun.updated_at).toLocaleDateString()}

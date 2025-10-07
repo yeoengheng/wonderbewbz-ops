@@ -88,6 +88,7 @@ const initialData: WizardData = {
   gramRatioStaffInput: "",
 };
 
+// eslint-disable-next-line complexity
 export function MachineRunWizard({ open, onOpenChange, order, onComplete, editingMachineRun }: MachineRunWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -265,14 +266,50 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     addBagToDate(newDate);
   };
 
+  const validateStep1 = () => {
+    // Base validation: mama name and NRIC required
+    if (!data.mamaName.trim() || !data.mamaNric.trim()) return false;
+
+    // Status-based validation
+    if (data.status === "pending") {
+      return data.dateExpressed.trim() !== "";
+    } else if (data.status === "processing") {
+      return data.dateExpressed.trim() !== "" && data.bagsWeight.trim() !== "" && data.dateProcessed.trim() !== "";
+    } else if (data.status === "completed") {
+      return data.dateExpressed.trim() !== "";
+    }
+    return true;
+  };
+
+  const validateStep2 = () => {
+    return data.bags.length > 0 && data.bags.every((bag) => bag.date && bag.weight);
+  };
+
+  const validateStep3 = () => {
+    // For completed status, validate all required fields
+    if (data.status === "completed") {
+      return (
+        data.bagsWeight.trim() !== "" &&
+        data.powderWeight.trim() !== "" &&
+        data.packingRequirements.trim() !== "" &&
+        data.waterToAdd.trim() !== "" &&
+        data.waterActivityLevel.trim() !== "" &&
+        data.gramRatioStaffInput.trim() !== "" &&
+        data.dateProcessed.trim() !== "" &&
+        data.datePacked.trim() !== ""
+      );
+    }
+    return true; // For other statuses, fields are optional
+  };
+
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return data.mamaName.trim() && data.mamaNric.trim();
+        return validateStep1();
       case 2:
-        return data.bags.length > 0 && data.bags.every((bag) => bag.date && bag.weight);
+        return validateStep2();
       case 3:
-        return true; // All fields are optional in step 3
+        return validateStep3();
       default:
         return false;
     }
@@ -303,7 +340,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   };
 
   const buildMachineRunData = () => ({
-    status: data.status as "pending" | "processing" | "completed" | "qa_failed" | "cancelled",
+    status: data.status as "pending" | "documented" | "processing" | "completed" | "qa_failed" | "cancelled",
     mama_name: data.mamaName,
     mama_nric: data.mamaNric,
     date_received: data.dateExpressed,
@@ -430,7 +467,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                <Button onClick={handleSave} disabled={loading}>
+                <Button onClick={handleSave} disabled={loading || !canProceed()}>
                   {loading ? "Saving..." : "Save"}
                 </Button>
               )}
@@ -498,7 +535,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
-              <Button onClick={handleSave} disabled={loading}>
+              <Button onClick={handleSave} disabled={loading || !canProceed()}>
                 {loading ? "Saving..." : "Save"}
               </Button>
             )}
