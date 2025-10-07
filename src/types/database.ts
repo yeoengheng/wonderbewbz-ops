@@ -23,6 +23,10 @@ export interface Order {
   shipping_addr_2?: string;
   postal_code?: string;
   phone?: string;
+  arrival_temp?: number;
+  arrival_weight?: number;
+  visual_check?: "passed" | "flagged";
+  visual_check_remarks?: string;
   user_id: string; // Clerk user ID
   created_at: string;
   updated_at: string;

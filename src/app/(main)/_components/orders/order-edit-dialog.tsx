@@ -1,3 +1,4 @@
+/* eslint-disable max-lines, complexity */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -18,6 +19,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useSupabase } from "@/hooks/use-supabase";
 import { cleanupOrderValues } from "@/lib/form-utils";
 import type { Order, Customer, MachineRun } from "@/types/database";
@@ -32,6 +34,10 @@ const orderSchema = z.object({
   shipping_addr_2: z.string().optional(),
   postal_code: z.string().optional(),
   phone: z.string().optional(),
+  arrival_temp: z.string().optional(),
+  arrival_weight: z.string().optional(),
+  visual_check: z.enum(["none", "passed", "flagged"]).nullable().optional(),
+  visual_check_remarks: z.string().optional(),
 });
 
 type OrderFormValues = z.infer<typeof orderSchema>;
@@ -58,6 +64,10 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
       shipping_addr_2: "",
       postal_code: "",
       phone: "",
+      arrival_temp: "",
+      arrival_weight: "",
+      visual_check: undefined,
+      visual_check_remarks: "",
     },
   });
 
@@ -86,6 +96,10 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
           shipping_addr_2: order.shipping_addr_2 ?? "",
           postal_code: order.postal_code ?? "",
           phone: order.phone ?? "",
+          arrival_temp: order.arrival_temp?.toString() ?? "",
+          arrival_weight: order.arrival_weight?.toString() ?? "",
+          visual_check: order.visual_check,
+          visual_check_remarks: order.visual_check_remarks ?? "",
         });
       } else {
         form.reset({
@@ -96,6 +110,10 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
           shipping_addr_2: "",
           postal_code: "",
           phone: "",
+          arrival_temp: "",
+          arrival_weight: "",
+          visual_check: undefined,
+          visual_check_remarks: "",
         });
       }
     }
@@ -291,6 +309,98 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="arrival_temp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Arrival Temp (°C)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.1" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="arrival_weight"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Arrival Weight (g)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.1" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="visual_check"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Visual Check</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        onValueChange={(value) => {
+                          if (value === "none") {
+                            field.onChange(null);
+                          } else {
+                            field.onChange(value);
+                          }
+                        }}
+                        value={field.value ?? "none"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select visual check result" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="passed">Passed</SelectItem>
+                          <SelectItem value="flagged">Flagged</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {field.value && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            form.setValue("visual_check", null);
+                            form.setValue("visual_check_remarks", "");
+                          }}
+                          className="text-muted-foreground hover:text-foreground h-9 px-3"
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {form.watch("visual_check") === "flagged" && (
+                <FormField
+                  control={form.control}
+                  name="visual_check_remarks"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Visual Check Remarks</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Enter remarks for flagged visual check" rows={3} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             <DialogFooter>

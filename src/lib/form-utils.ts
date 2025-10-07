@@ -64,6 +64,7 @@ export function convertFormValues(values: Record<string, string | undefined>) {
 /**
  * Standard cleanup for order form values
  */
+// eslint-disable-next-line complexity
 export function cleanupOrderValues(values: {
   shopify_order_id: string;
   customer_id: string;
@@ -72,6 +73,10 @@ export function cleanupOrderValues(values: {
   shipping_addr_2?: string;
   postal_code?: string;
   phone?: string;
+  arrival_temp?: string;
+  arrival_weight?: string;
+  visual_check?: string | null;
+  visual_check_remarks?: string;
 }): {
   shopify_order_id: string;
   customer_id: string;
@@ -80,6 +85,10 @@ export function cleanupOrderValues(values: {
   shipping_addr_2: string | null;
   postal_code: string | null;
   phone: string | null;
+  arrival_temp: number | null;
+  arrival_weight: number | null;
+  visual_check: string | null;
+  visual_check_remarks: string | null;
 } {
   return {
     shopify_order_id: values.shopify_order_id,
@@ -89,6 +98,10 @@ export function cleanupOrderValues(values: {
     shipping_addr_2: values.shipping_addr_2 ?? null,
     postal_code: values.postal_code ?? null,
     phone: values.phone ?? null,
+    arrival_temp: values.arrival_temp && values.arrival_temp !== "" ? parseFloat(values.arrival_temp) : null,
+    arrival_weight: values.arrival_weight && values.arrival_weight !== "" ? parseFloat(values.arrival_weight) : null,
+    visual_check: values.visual_check && values.visual_check !== "none" ? values.visual_check : null,
+    visual_check_remarks: values.visual_check_remarks ?? null,
   };
 }
 

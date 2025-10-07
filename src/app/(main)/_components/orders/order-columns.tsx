@@ -95,6 +95,46 @@ export const createOrderColumns = ({
     },
   },
   {
+    accessorKey: "arrival_temp",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Arrival Temp" />,
+    cell: ({ row }) => {
+      const temp = row.getValue("arrival_temp");
+      return (
+        <div className="text-sm">{temp ? `${temp}°C` : <span className="text-muted-foreground italic">-</span>}</div>
+      );
+    },
+  },
+  {
+    accessorKey: "arrival_weight",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Arrival Weight" />,
+    cell: ({ row }) => {
+      const weight = row.getValue("arrival_weight");
+      return (
+        <div className="text-sm">{weight ? `${weight}g` : <span className="text-muted-foreground italic">-</span>}</div>
+      );
+    },
+  },
+  {
+    accessorKey: "visual_check",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Visual Check" />,
+    cell: ({ row }) => {
+      const visualCheck = row.getValue("visual_check");
+
+      if (!visualCheck) {
+        return <span className="text-muted-foreground italic">-</span>;
+      }
+
+      const config = {
+        passed: { label: "Passed", className: "bg-green-100 text-green-700 hover:bg-green-100" },
+        flagged: { label: "Flagged", className: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100" },
+      };
+
+      const checkConfig = config[visualCheck as keyof typeof config];
+
+      return <Badge className={checkConfig?.className}>{checkConfig?.label}</Badge>;
+    },
+  },
+  {
     id: "machine_runs",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Machine Runs" />,
     cell: ({ row }) => {
