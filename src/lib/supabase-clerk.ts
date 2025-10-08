@@ -10,7 +10,17 @@ export function createClerkSupabaseClient(session: Record<string, unknown>) {
   return createClient<Database>(supabaseUrl, supabaseKey, {
     global: {
       headers: (async () => {
-        const token = session ? await (session as any).getToken() : null;
+        if (!session) return {};
+
+        // Try to get Supabase template token, fall back to default
+        let token;
+        try {
+          token = await (session as any).getToken({ template: "supabase" });
+        } catch {
+          console.warn("Supabase JWT template not found, using default token");
+          token = await (session as any).getToken();
+        }
+
         return token ? { Authorization: `Bearer ${token}` } : {};
       }) as any,
     },
@@ -22,7 +32,17 @@ export function createClerkSupabaseClientAlt(session: Record<string, unknown>) {
   return createClient<Database>(supabaseUrl, supabaseKey, {
     global: {
       headers: (async () => {
-        const token = session ? await (session as any).getToken() : null;
+        if (!session) return {};
+
+        // Try to get Supabase template token, fall back to default
+        let token;
+        try {
+          token = await (session as any).getToken({ template: "supabase" });
+        } catch {
+          console.warn("Supabase JWT template not found, using default token");
+          token = await (session as any).getToken();
+        }
+
         return token ? { Authorization: `Bearer ${token}` } : {};
       }) as any,
     },
