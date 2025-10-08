@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/types/database";
 
+import { SidepanelCrossChecks } from "./sidepanel-cross-checks";
 import { SidepanelIndividualBags } from "./sidepanel-individual-bags";
 
 type MachineRun = Database["public"]["Tables"]["machine_runs"]["Row"];
@@ -219,6 +220,7 @@ export function MachineRunSidepanel({
 
             <TabsContent value="inputs" className="space-y-8 px-1">
               <AdditionalInputsSection machineRun={machineRun} />
+              <SidepanelCrossChecks machineRun={machineRun} />
             </TabsContent>
 
             <TabsContent value="individual-bags" className="space-y-8 px-1">

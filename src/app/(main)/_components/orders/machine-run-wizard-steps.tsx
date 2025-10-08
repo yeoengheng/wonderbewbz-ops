@@ -5,8 +5,10 @@ import { Beaker } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 
+import { FinalCrossCheckSection } from "./final-cross-check-section";
 import { IndividualBagsSection } from "./individual-bags-section";
 import { MachineRunOutputs } from "./machine-run-outputs";
 
@@ -14,6 +16,12 @@ interface IndividualBag {
   id: string;
   date: string;
   weight: string;
+}
+
+interface CrossCheck {
+  id: string;
+  powderWeight: string;
+  quantity: string;
 }
 
 interface WizardData {
@@ -38,6 +46,9 @@ interface WizardData {
   waterToAdd: string;
   waterActivityLevel: string;
   gramRatioStaffInput: string;
+
+  // Step 3: Cross Checks
+  crossChecks: CrossCheck[];
 }
 
 export function Step1({ data, updateData }: { data: WizardData; updateData: (updates: Partial<WizardData>) => void }) {
@@ -170,7 +181,21 @@ export function Step2({
   );
 }
 
-export function Step3({ data, updateData }: { data: WizardData; updateData: (updates: Partial<WizardData>) => void }) {
+export function Step3({
+  data,
+  updateData,
+  addCrossCheck,
+  updateCrossCheck,
+  removeCrossCheck,
+  onNavigateToStep,
+}: {
+  data: WizardData;
+  updateData: (updates: Partial<WizardData>) => void;
+  addCrossCheck: () => void;
+  updateCrossCheck: (id: string, field: keyof Omit<CrossCheck, "id">, value: string) => void;
+  removeCrossCheck: (id: string) => void;
+  onNavigateToStep?: (step: number) => void;
+}) {
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -259,6 +284,16 @@ export function Step3({ data, updateData }: { data: WizardData; updateData: (upd
         {/* Outputs */}
         <MachineRunOutputs data={data} />
       </div>
+
+      <Separator className="my-8" />
+
+      <FinalCrossCheckSection
+        data={data}
+        addCrossCheck={addCrossCheck}
+        updateCrossCheck={updateCrossCheck}
+        removeCrossCheck={removeCrossCheck}
+        onNavigateToStep={onNavigateToStep}
+      />
     </div>
   );
 }

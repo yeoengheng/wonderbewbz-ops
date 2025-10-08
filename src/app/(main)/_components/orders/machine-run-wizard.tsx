@@ -34,6 +34,12 @@ interface IndividualBag {
   weight: string;
 }
 
+interface CrossCheck {
+  id: string;
+  powderWeight: string;
+  quantity: string;
+}
+
 const individualBagSchema = z.object({
   id: z.string(),
   date: z.string().min(1, "Date is required"),
@@ -41,6 +47,12 @@ const individualBagSchema = z.object({
     .string()
     .min(1, "Weight is required")
     .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, "Weight must be a positive number"),
+});
+
+const crossCheckSchema = z.object({
+  id: z.string(),
+  powderWeight: z.string().min(1, "Powder weight is required"),
+  quantity: z.string().min(1, "Quantity is required"),
 });
 
 const machineRunSchema = z.object({
@@ -65,6 +77,9 @@ const machineRunSchema = z.object({
   waterToAdd: z.string(),
   waterActivityLevel: z.string(),
   gramRatioStaffInput: z.string(),
+
+  // Step 3: Cross Checks
+  crossChecks: z.array(crossCheckSchema),
 });
 
 type WizardData = z.infer<typeof machineRunSchema>;
@@ -86,6 +101,7 @@ const initialData: WizardData = {
   waterToAdd: "",
   waterActivityLevel: "",
   gramRatioStaffInput: "",
+  crossChecks: [],
 };
 
 // eslint-disable-next-line complexity
@@ -180,6 +196,35 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     [supabase, form],
   );
 
+  const loadCrossChecks = useCallback(
+    async (machineRunId: string) => {
+      try {
+        const { data: checks, error } = await supabase
+          .from("cross_checks")
+          .select("*")
+          .eq("machine_run_id", machineRunId);
+
+        if (error) {
+          console.error("Error loading cross checks:", error);
+          return;
+        }
+
+        const formattedChecks: CrossCheck[] =
+          (checks as any)?.map((check: any, index: number) => ({
+            id: `check-${index + 1}`,
+            powderWeight: check.powder_weight_g?.toString() ?? "",
+            quantity: check.quantity?.toString() ?? "",
+          })) ?? [];
+
+        form.setValue("crossChecks", formattedChecks);
+        setCrossCheckCounter(formattedChecks.length);
+      } catch (error) {
+        console.error("Error loading cross checks:", error);
+      }
+    },
+    [supabase, form],
+  );
+
   const populateFormFields = useCallback(
     (machineRun: MachineRun) => {
       const editData = mapMachineRunToFormData(machineRun);
@@ -198,9 +243,11 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
         if (editingMachineRun) {
           populateFormFields(editingMachineRun);
           await loadIndividualBags(editingMachineRun.machine_run_id);
+          await loadCrossChecks(editingMachineRun.machine_run_id);
         } else {
           form.reset(initialData);
           setBagCounter(0);
+          setCrossCheckCounter(0);
         }
       } else if (!open && initialized) {
         // Reset initialized state when dialog closes
@@ -264,6 +311,29 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
 
     // Add first bag to the new date group (a date group needs at least one bag)
     addBagToDate(newDate);
+  };
+
+  // Cross Check handlers
+  const [crossCheckCounter, setCrossCheckCounter] = useState(0);
+
+  const addCrossCheck = () => {
+    const nextCounter = crossCheckCounter + 1;
+    setCrossCheckCounter(nextCounter);
+    const newCheck: CrossCheck = {
+      id: `check-${nextCounter}`,
+      powderWeight: "",
+      quantity: "",
+    };
+    updateData({ crossChecks: [...data.crossChecks, newCheck] });
+  };
+
+  const updateCrossCheck = (id: string, field: keyof Omit<CrossCheck, "id">, value: string) => {
+    const updatedChecks = data.crossChecks.map((check) => (check.id === id ? { ...check, [field]: value } : check));
+    updateData({ crossChecks: updatedChecks });
+  };
+
+  const removeCrossCheck = (id: string) => {
+    updateData({ crossChecks: data.crossChecks.filter((check) => check.id !== id) });
   };
 
   const validateStep1 = () => {
@@ -418,6 +488,31 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     }
   };
 
+  const createCrossChecks = async (machineRunId: string) => {
+    if (data.crossChecks.length === 0) return;
+
+    const crossCheckInserts = data.crossChecks.map((check) => ({
+      machine_run_id: machineRunId,
+      powder_weight_g: parseFloat(check.powderWeight),
+      quantity: parseInt(check.quantity),
+      user_id: order.user_id,
+    }));
+
+    // @ts-expect-error: Supabase RLS policy causing type inference issue
+    const { error } = await supabase.from("cross_checks").insert(crossCheckInserts);
+    if (error) throw error;
+  };
+
+  const updateCrossChecks = async (machineRunId: string) => {
+    // Delete existing cross checks
+    await supabase.from("cross_checks").delete().eq("machine_run_id", machineRunId);
+
+    // Insert new cross checks
+    if (data.crossChecks.length > 0) {
+      await createCrossChecks(machineRunId);
+    }
+  };
+
   const handleSave = async () => {
     if (!isLoaded || !order) return;
 
@@ -426,15 +521,18 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       if (editingMachineRun) {
         await updateMachineRun(editingMachineRun.machine_run_id);
         await updateIndividualBags(editingMachineRun.machine_run_id);
+        await updateCrossChecks(editingMachineRun.machine_run_id);
       } else {
         const runNumber = await getNextRunNumber();
         const machineRun = await createMachineRun(runNumber);
         await createIndividualBags(machineRun.machine_run_id);
+        await createCrossChecks(machineRun.machine_run_id);
       }
 
       form.reset(initialData);
       setCurrentStep(1);
       setBagCounter(0);
+      setCrossCheckCounter(0);
       setInitialized(false);
       onComplete();
     } catch (error) {
@@ -448,6 +546,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     form.reset(initialData);
     setCurrentStep(1);
     setBagCounter(0);
+    setCrossCheckCounter(0);
     setInitialized(false);
     onOpenChange(false);
   };
@@ -518,7 +617,16 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
                 updateDateGroupDate={updateDateGroupDate}
               />
             )}
-            {currentStep === 3 && <Step3 data={data} updateData={updateData} />}
+            {currentStep === 3 && (
+              <Step3
+                data={data}
+                updateData={updateData}
+                addCrossCheck={addCrossCheck}
+                updateCrossCheck={updateCrossCheck}
+                removeCrossCheck={removeCrossCheck}
+                onNavigateToStep={setCurrentStep}
+              />
+            )}
           </div>
         </div>
 

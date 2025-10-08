@@ -70,6 +70,16 @@ export interface IndividualBag {
   updated_at: string;
 }
 
+export interface CrossCheck {
+  cross_check_id: string;
+  machine_run_id: string;
+  powder_weight_g: number;
+  quantity: number;
+  user_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Joined types for common queries
 export interface OrderWithCustomer extends Order {
   customer: Customer;
@@ -110,6 +120,11 @@ export interface Database {
         Row: IndividualBag;
         Insert: Omit<IndividualBag, "bag_id" | "created_at" | "updated_at">;
         Update: Partial<Omit<IndividualBag, "bag_id" | "created_at" | "updated_at">>;
+      };
+      cross_checks: {
+        Row: CrossCheck;
+        Insert: Omit<CrossCheck, "cross_check_id" | "created_at" | "updated_at" | "user_id">;
+        Update: Partial<Omit<CrossCheck, "cross_check_id" | "created_at" | "updated_at" | "user_id">>;
       };
     };
     Views: {
