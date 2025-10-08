@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { Button } from "@/components/ui/button";
@@ -9,15 +9,17 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Customer } from "@/types/database";
 
 interface CustomerColumnsProps {
   onEdit: (customer: Customer) => void;
+  onDelete: (customer: Customer) => void;
 }
 
-export const createCustomerColumns = ({ onEdit }: CustomerColumnsProps): ColumnDef<Customer>[] => [
+export const createCustomerColumns = ({ onEdit, onDelete }: CustomerColumnsProps): ColumnDef<Customer>[] => [
   {
     accessorKey: "shopify_customer_id",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Shopify Customer ID" />,
@@ -116,6 +118,11 @@ export const createCustomerColumns = ({ onEdit }: CustomerColumnsProps): ColumnD
             <DropdownMenuItem onClick={() => onEdit(customer)}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit Customer
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onDelete(customer)} className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Customer
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

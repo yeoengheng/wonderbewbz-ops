@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,33 @@ export function MachineRunManagementDialog({
     setIsWizardOpen(true);
   };
 
+  const handleDeleteMachineRun = async (machineRun: MachineRun) => {
+    if (
+      !confirm(`Are you sure you want to delete Machine Run ${machineRun.run_number}? This action cannot be undone.`)
+    ) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("machine_runs").delete().eq("machine_run_id", machineRun.machine_run_id);
+
+      if (error) {
+        console.error("Error deleting machine run:", error);
+        alert("Failed to delete machine run. Please try again.");
+        return;
+      }
+
+      // Remove from local state
+      setMachineRuns((prev) => prev.filter((mr) => mr.machine_run_id !== machineRun.machine_run_id));
+
+      // Notify parent to refresh
+      onMachineRunsUpdated?.();
+    } catch (error) {
+      console.error("Error deleting machine run:", error);
+      alert("Failed to delete machine run. Please try again.");
+    }
+  };
+
   const handleWizardComplete = () => {
     setIsWizardOpen(false);
     setEditingMachineRun(null);
@@ -120,6 +147,7 @@ export function MachineRunManagementDialog({
                     runLabel={`${run.run_number}`}
                     onClick={() => onMachineRunClick?.(run)}
                     onEdit={() => handleEditMachineRun(run)}
+                    onDelete={() => handleDeleteMachineRun(run)}
                   />
                 ))}
               </div>
@@ -144,9 +172,10 @@ interface MachineRunCardProps {
   runLabel: string;
   onClick: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
-function MachineRunCard({ machineRun, runLabel, onClick, onEdit }: MachineRunCardProps) {
+function MachineRunCard({ machineRun, runLabel, onClick, onEdit, onDelete }: MachineRunCardProps) {
   const statusConfig = {
     milk_arrived: { label: "Milk Arrived", className: "bg-purple-100 text-purple-700 hover:bg-purple-100" },
     pending: { label: "Pending", className: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100" },
@@ -177,6 +206,17 @@ function MachineRunCard({ machineRun, runLabel, onClick, onEdit }: MachineRunCar
             }}
           >
             Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>

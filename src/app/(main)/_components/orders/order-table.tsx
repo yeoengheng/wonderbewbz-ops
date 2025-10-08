@@ -50,6 +50,27 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
       setSelectedOrderForMachineRuns(order);
       setIsMachineRunDialogOpen(true);
     },
+    onDelete: async (order) => {
+      if (!confirm(`Are you sure you want to delete order ${order.shopify_order_id}? This action cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        const { error } = await supabase.from("orders").delete().eq("order_id", order.order_id);
+
+        if (error) {
+          console.error("Error deleting order:", error);
+          alert("Failed to delete order. Please try again.");
+          return;
+        }
+
+        // Remove from local state
+        setData((prev) => prev.filter((o) => o.order_id !== order.order_id));
+      } catch (error) {
+        console.error("Error deleting order:", error);
+        alert("Failed to delete order. Please try again.");
+      }
+    },
   });
 
   const loadOrders = useCallback(async () => {

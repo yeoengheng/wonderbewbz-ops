@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Package, Settings } from "lucide-react";
+import { MoreHorizontal, Pencil, Package, Settings, Trash2 } from "lucide-react";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Database } from "@/types/database";
@@ -23,12 +24,14 @@ interface OrderColumnsProps {
   onEdit: (order: OrderWithCustomer) => void;
   onMachineRunClick: (machineRun: MachineRun, order: OrderWithCustomer) => void;
   onManageMachineRuns: (order: OrderWithCustomer) => void;
+  onDelete: (order: OrderWithCustomer) => void;
 }
 
 export const createOrderColumns = ({
   onEdit,
   onMachineRunClick,
   onManageMachineRuns,
+  onDelete,
 }: OrderColumnsProps): ColumnDef<OrderWithCustomer>[] => [
   {
     accessorKey: "shopify_order_id",
@@ -218,6 +221,11 @@ export const createOrderColumns = ({
             <DropdownMenuItem onClick={() => onManageMachineRuns(order)}>
               <Settings className="mr-2 h-4 w-4" />
               Add/Edit Machine Runs
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onDelete(order)} className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Order
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

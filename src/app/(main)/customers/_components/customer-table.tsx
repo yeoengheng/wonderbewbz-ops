@@ -28,6 +28,27 @@ export function CustomerTable({ initialData = [] }: CustomerTableProps) {
       setSelectedCustomer(customer);
       setIsEditDialogOpen(true);
     },
+    onDelete: async (customer) => {
+      if (!confirm(`Are you sure you want to delete ${customer.name}? This action cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        const { error } = await supabase.from("customers").delete().eq("customer_id", customer.customer_id);
+
+        if (error) {
+          console.error("Error deleting customer:", error);
+          alert("Failed to delete customer. Please try again.");
+          return;
+        }
+
+        // Remove from local state
+        setData((prev) => prev.filter((c) => c.customer_id !== customer.customer_id));
+      } catch (error) {
+        console.error("Error deleting customer:", error);
+        alert("Failed to delete customer. Please try again.");
+      }
+    },
   });
 
   const loadCustomers = useCallback(async () => {
