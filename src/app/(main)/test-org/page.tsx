@@ -12,6 +12,29 @@ export default async function TestOrgPage() {
   // Get Supabase client with JWT
   const supabase = await createServerSupabaseClient();
 
+  // Debug: Get the actual JWT token to see what's in it
+  const { getToken } = await auth();
+  let tokenDebug = null;
+  try {
+    const token = await getToken({ template: "supabase" });
+    if (token) {
+      // Decode JWT to see claims (just for debugging)
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        tokenDebug = JSON.parse(Buffer.from(parts[1], "base64").toString());
+      }
+    }
+  } catch {
+    // Template doesn't exist, try default
+    const token = await getToken();
+    if (token) {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        tokenDebug = JSON.parse(Buffer.from(parts[1], "base64").toString());
+      }
+    }
+  }
+
   // Test the get_current_org_id function
   const { data: orgIdTest, error: orgIdError } = await supabase.rpc("get_current_org_id");
 
@@ -48,6 +71,26 @@ export default async function TestOrgPage() {
           <div>
             <span className="font-semibold">User Email:</span> {user?.emailAddresses[0]?.emailAddress ?? "N/A"}
           </div>
+        </div>
+      </div>
+
+      {/* JWT Token Debug */}
+      <div className="bg-card rounded-lg border p-6">
+        <h2 className="mb-4 text-xl font-semibold">JWT Token Debug</h2>
+        <div className="space-y-2 font-mono text-xs">
+          <div>
+            <span className="font-semibold">JWT Claims:</span>
+            <pre className="bg-muted mt-2 overflow-auto rounded p-2">
+              {tokenDebug ? JSON.stringify(tokenDebug, null, 2) : "No token found"}
+            </pre>
+          </div>
+          {tokenDebug && !tokenDebug.org_id && (
+            <div className="mt-2 rounded bg-yellow-100 p-3 text-yellow-800">
+              <strong>⚠️ WARNING:</strong> JWT does not contain org_id claim! This is why RLS is failing.
+              <br />
+              You need to create a Supabase JWT template in Clerk with org_id claim.
+            </div>
+          )}
         </div>
       </div>
 
