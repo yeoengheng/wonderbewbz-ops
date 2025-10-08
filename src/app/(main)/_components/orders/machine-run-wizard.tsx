@@ -90,7 +90,7 @@ const initialData: WizardData = {
   dateExpressed: "",
   runNumber: "",
   machineRun: "",
-  status: "pending",
+  status: "milk_arrived",
   dateProcessed: "",
   datePacked: "",
   remarks: "",
@@ -131,7 +131,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     dateExpressed: mr.date_received ?? "",
     runNumber: mr.run_number?.toString() ?? "",
     machineRun: "", // This will be used for the new Machine field
-    status: mr.status ?? "pending",
+    status: mr.status ?? "milk_arrived",
     dateProcessed: mr.date_processed ?? "",
     datePacked: mr.date_packed ?? "",
     remarks: mr.remarks ?? "",
@@ -341,7 +341,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     if (!data.mamaName.trim() || !data.mamaNric.trim()) return false;
 
     // Status-based validation
-    if (data.status === "pending") {
+    if (data.status === "milk_arrived" || data.status === "pending") {
       return data.dateExpressed.trim() !== "";
     } else if (data.status === "processing") {
       return data.dateExpressed.trim() !== "" && data.bagsWeight.trim() !== "" && data.dateProcessed.trim() !== "";
@@ -410,7 +410,14 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   };
 
   const buildMachineRunData = () => ({
-    status: data.status as "pending" | "documented" | "processing" | "completed" | "qa_failed" | "cancelled",
+    status: data.status as
+      | "milk_arrived"
+      | "pending"
+      | "documented"
+      | "processing"
+      | "completed"
+      | "qa_failed"
+      | "cancelled",
     mama_name: data.mamaName,
     mama_nric: data.mamaNric,
     date_received: data.dateExpressed,
@@ -450,6 +457,8 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       updated_at: new Date().toISOString(),
     };
 
+    console.log("Updating machine run:", machineRunId, updateData);
+
     const { data: machineRun, error } = await supabase
       .from("machine_runs")
       // @ts-expect-error: Supabase RLS policy causing type inference issue
@@ -458,7 +467,10 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Update error:", error);
+      throw error;
+    }
     return machineRun as MachineRun;
   };
 

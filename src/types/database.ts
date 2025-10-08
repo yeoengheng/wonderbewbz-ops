@@ -1,5 +1,12 @@
 export type OrderStatus = "pending" | "processing" | "completed";
-export type MachineRunStatus = "pending" | "documented" | "processing" | "completed" | "qa_failed" | "cancelled";
+export type MachineRunStatus =
+  | "milk_arrived"
+  | "pending"
+  | "documented"
+  | "processing"
+  | "completed"
+  | "qa_failed"
+  | "cancelled";
 
 export interface Customer {
   customer_id: string;
