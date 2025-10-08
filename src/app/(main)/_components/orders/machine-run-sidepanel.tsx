@@ -48,6 +48,10 @@ function OrderInfoSection({ machineRun }: { machineRun: MachineRun }) {
         </div>
         <div className="space-y-3 p-4">
           <div className="flex items-center justify-between">
+            <span className="text-muted-foreground text-sm">Machine Run</span>
+            <span className="text-sm font-medium">{machineRun.run_number ?? "-"}</span>
+          </div>
+          <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-sm">Mama&apos;s Name</span>
             <span className="text-sm font-medium">{machineRun.mama_name ?? "-"}</span>
           </div>

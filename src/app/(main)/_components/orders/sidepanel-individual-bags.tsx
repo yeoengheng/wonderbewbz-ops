@@ -119,12 +119,7 @@ export function SidepanelIndividualBags({ machineRun }: SidepanelIndividualBagsP
                 <div className="grid grid-cols-2 gap-2">
                   {bags.map((bag) => (
                     <div key={bag.bag_id} className="flex items-center justify-between rounded-md border p-2">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-muted flex h-6 w-6 items-center justify-center rounded text-xs font-medium">
-                          {bag.bag_number}
-                        </div>
-                        <span className="text-muted-foreground text-xs">Bag {bag.bag_number}</span>
-                      </div>
+                      <span className="text-muted-foreground text-xs">Bag {bag.bag_number}</span>
                       <span className="font-mono text-xs">{bag.weight_g}g</span>
                     </div>
                   ))}
