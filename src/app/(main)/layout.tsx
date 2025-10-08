@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 
 import { cookies } from "next/headers";
 
+import { OrganizationSwitcher } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -56,6 +57,18 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
               <SidebarTrigger className="-ml-1" />
             </div>
             <div className="flex items-center gap-2">
+              <OrganizationSwitcher
+                hidePersonal
+                afterSelectOrganizationUrl="/"
+                afterCreateOrganizationUrl="/"
+                appearance={{
+                  elements: {
+                    rootBox: "flex items-center",
+                    organizationSwitcherTrigger:
+                      "border border-input hover:bg-accent hover:text-accent-foreground h-8 px-3 rounded-md",
+                  },
+                }}
+              />
               <LayoutControls {...layoutPreferences} />
               <ThemeSwitcher />
               <AccountSwitcher

@@ -4,11 +4,12 @@ import { getAuthenticatedSupabaseClient, getCurrentUserProfile } from "./clerk-i
 
 // Authenticated versions of your queries that automatically include user context
 export const authenticatedQueries = {
-  // Customer operations with user context
+  // Customer operations with organization context (RLS enforces org_id automatically)
   customers: {
     async getAll() {
-      const { supabaseClient, userId } = await getAuthenticatedSupabaseClient();
+      const { supabaseClient } = await getAuthenticatedSupabaseClient();
 
+      // RLS automatically filters by org_id from JWT
       const { data, error } = await supabaseClient
         .from("customers")
         .select("*")
@@ -18,9 +19,10 @@ export const authenticatedQueries = {
       return data;
     },
 
-    async create(customer: Omit<Customer, "customer_id" | "created_at" | "updated_at">) {
+    async create(customer: Omit<Customer, "customer_id" | "created_at" | "updated_at" | "user_id" | "org_id">) {
       const { supabaseClient, userId } = await getAuthenticatedSupabaseClient();
 
+      // org_id will be set automatically by database default from JWT
       const customerData = {
         ...customer,
         created_by: userId,
@@ -37,11 +39,12 @@ export const authenticatedQueries = {
     },
   },
 
-  // Order operations with user context
+  // Order operations with organization context (RLS enforces org_id automatically)
   orders: {
     async getAll() {
       const { supabaseClient } = await getAuthenticatedSupabaseClient();
 
+      // RLS automatically filters by org_id from JWT
       const { data, error } = await supabaseClient
         .from("orders")
         .select(
@@ -56,9 +59,10 @@ export const authenticatedQueries = {
       return data as OrderWithCustomer[];
     },
 
-    async create(order: Omit<Order, "order_id" | "created_at" | "updated_at">) {
+    async create(order: Omit<Order, "order_id" | "created_at" | "updated_at" | "user_id" | "org_id">) {
       const { supabaseClient, userId } = await getAuthenticatedSupabaseClient();
 
+      // org_id will be set automatically by database default from JWT
       const orderData = {
         ...order,
         created_by: userId,
@@ -80,11 +84,12 @@ export const authenticatedQueries = {
     },
   },
 
-  // Machine run operations with user context
+  // Machine run operations with organization context (RLS enforces org_id automatically)
   machineRuns: {
-    async create(machineRun: Omit<MachineRun, "machine_run_id" | "created_at" | "updated_at">) {
+    async create(machineRun: Omit<MachineRun, "machine_run_id" | "created_at" | "updated_at" | "user_id" | "org_id">) {
       const { supabaseClient, userId } = await getAuthenticatedSupabaseClient();
 
+      // org_id will be set automatically by database default from JWT
       const machineRunData = {
         ...machineRun,
         created_by: userId,
@@ -110,7 +115,7 @@ export const authenticatedQueries = {
 
     async updateWithUser(
       machineRunId: string,
-      updates: Partial<Omit<MachineRun, "machine_run_id" | "created_at" | "updated_at">>,
+      updates: Partial<Omit<MachineRun, "machine_run_id" | "created_at" | "updated_at" | "user_id" | "org_id">>,
     ) {
       const { supabaseClient, userId } = await getAuthenticatedSupabaseClient();
 
@@ -119,6 +124,7 @@ export const authenticatedQueries = {
         updated_by: userId,
       };
 
+      // RLS automatically ensures this update only affects records in the user's org
       const { data, error } = await (supabaseClient as any)
         .from("machine_runs")
         .update(updateData)
@@ -139,24 +145,22 @@ export const authenticatedQueries = {
     },
   },
 
-  // Get current user's activity
-  async getUserActivity() {
-    const { supabaseClient, userId } = await getAuthenticatedSupabaseClient();
+  // Get organization activity (RLS filters automatically by org_id)
+  async getOrganizationActivity() {
+    const { supabaseClient } = await getAuthenticatedSupabaseClient();
     const userProfile = await getCurrentUserProfile();
 
-    // Get user's recent activities
+    // Get organization's recent activities (RLS automatically filters by org)
     const [ordersResult, machineRunsResult] = await Promise.all([
       supabaseClient
         .from("orders")
         .select("*, customer:customers(*)")
-        .eq("created_by", userId)
         .order("created_at", { ascending: false })
         .limit(10),
 
       supabaseClient
         .from("machine_runs")
         .select("*, order:orders(*, customer:customers(*))")
-        .eq("created_by", userId)
         .order("created_at", { ascending: false })
         .limit(10),
     ]);
@@ -166,5 +170,10 @@ export const authenticatedQueries = {
       recentOrders: ordersResult.data ?? [],
       recentMachineRuns: machineRunsResult.data ?? [],
     };
+  },
+
+  // Legacy method - now returns org activity instead of user activity
+  async getUserActivity() {
+    return this.getOrganizationActivity();
   },
 };

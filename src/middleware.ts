@@ -8,8 +8,11 @@ const isPublicRoute = createRouteMatcher(["/auth/v2/login", "/auth/v2/register"]
 // Define auth routes
 const isAuthRoute = createRouteMatcher(["/auth/v2/login", "/auth/v2/register"]);
 
+// Define organization selection route
+const isOrgSelectionRoute = createRouteMatcher(["/select-organization"]);
+
 export default clerkMiddleware(async (auth, request) => {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
 
   // If user is authenticated and trying to access auth pages, redirect to dashboard
   if (userId && isAuthRoute(request)) {
@@ -19,6 +22,12 @@ export default clerkMiddleware(async (auth, request) => {
   // If user is not authenticated and trying to access protected routes, redirect to login
   if (!userId && !isPublicRoute(request)) {
     return NextResponse.redirect(new URL("/auth/v2/login", request.url));
+  }
+
+  // If user is authenticated but not part of any organization and not on org selection page
+  if (userId && !orgId && !isPublicRoute(request) && !isOrgSelectionRoute(request)) {
+    // Redirect to organization selection/creation page
+    return NextResponse.redirect(new URL("/select-organization", request.url));
   }
 
   return NextResponse.next();

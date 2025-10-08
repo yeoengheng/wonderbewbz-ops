@@ -10,6 +10,7 @@ export interface Customer {
   shipping_addr_2?: string;
   postal_code?: string;
   user_id: string; // Clerk user ID
+  org_id: string; // Clerk organization ID for multi-tenant isolation
   created_at: string;
   updated_at: string;
 }
@@ -28,6 +29,7 @@ export interface Order {
   visual_check?: "passed" | "flagged";
   visual_check_remarks?: string;
   user_id: string; // Clerk user ID
+  org_id: string; // Clerk organization ID for multi-tenant isolation
   created_at: string;
   updated_at: string;
 }
@@ -55,6 +57,7 @@ export interface MachineRun {
   // Other inputs
   remarks?: string;
   user_id: string; // Clerk user ID
+  org_id: string; // Clerk organization ID for multi-tenant isolation
   created_at: string;
   updated_at: string;
 }
@@ -76,6 +79,7 @@ export interface CrossCheck {
   powder_weight_g: number;
   quantity: number;
   user_id?: string;
+  org_id?: string; // Clerk organization ID for multi-tenant isolation
   created_at: string;
   updated_at: string;
 }
@@ -103,18 +107,18 @@ export interface Database {
     Tables: {
       customers: {
         Row: Customer;
-        Insert: Omit<Customer, "customer_id" | "created_at" | "updated_at" | "user_id">;
-        Update: Partial<Omit<Customer, "customer_id" | "created_at" | "updated_at" | "user_id">>;
+        Insert: Omit<Customer, "customer_id" | "created_at" | "updated_at" | "user_id" | "org_id">;
+        Update: Partial<Omit<Customer, "customer_id" | "created_at" | "updated_at" | "user_id" | "org_id">>;
       };
       orders: {
         Row: Order;
-        Insert: Omit<Order, "order_id" | "created_at" | "updated_at" | "user_id">;
-        Update: Partial<Omit<Order, "order_id" | "created_at" | "updated_at" | "user_id">>;
+        Insert: Omit<Order, "order_id" | "created_at" | "updated_at" | "user_id" | "org_id">;
+        Update: Partial<Omit<Order, "order_id" | "created_at" | "updated_at" | "user_id" | "org_id">>;
       };
       machine_runs: {
         Row: MachineRun;
-        Insert: Omit<MachineRun, "machine_run_id" | "created_at" | "updated_at" | "user_id">;
-        Update: Partial<Omit<MachineRun, "machine_run_id" | "created_at" | "updated_at" | "user_id">>;
+        Insert: Omit<MachineRun, "machine_run_id" | "created_at" | "updated_at" | "user_id" | "org_id">;
+        Update: Partial<Omit<MachineRun, "machine_run_id" | "created_at" | "updated_at" | "user_id" | "org_id">>;
       };
       individual_bags: {
         Row: IndividualBag;
@@ -123,8 +127,8 @@ export interface Database {
       };
       cross_checks: {
         Row: CrossCheck;
-        Insert: Omit<CrossCheck, "cross_check_id" | "created_at" | "updated_at" | "user_id">;
-        Update: Partial<Omit<CrossCheck, "cross_check_id" | "created_at" | "updated_at" | "user_id">>;
+        Insert: Omit<CrossCheck, "cross_check_id" | "created_at" | "updated_at" | "user_id" | "org_id">;
+        Update: Partial<Omit<CrossCheck, "cross_check_id" | "created_at" | "updated_at" | "user_id" | "org_id">>;
       };
     };
     Views: {
