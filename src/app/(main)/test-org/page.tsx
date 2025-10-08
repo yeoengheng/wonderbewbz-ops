@@ -1,6 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 
 import { createServerSupabaseClient } from "@/lib/supabase";
+import type { Customer } from "@/types/database";
 
 /* eslint-disable complexity */
 export default async function TestOrgPage() {
@@ -120,7 +121,7 @@ export default async function TestOrgPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {customers.map((customer) => (
+                      {(customers as Customer[]).map((customer) => (
                         <tr key={customer.customer_id} className="border-t">
                           <td className="p-2">{customer.name}</td>
                           <td className="p-2 font-mono text-xs">{customer.org_id}</td>
