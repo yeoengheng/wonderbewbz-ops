@@ -37,6 +37,7 @@ export function CustomerTable({ initialData = [] }: CustomerTableProps) {
     }
 
     console.log("Loading customers from Supabase...");
+    console.log("Supabase client:", supabase);
     setLoading(true);
     try {
       const { data: customers, error } = await supabase
@@ -44,13 +45,17 @@ export function CustomerTable({ initialData = [] }: CustomerTableProps) {
         .select("*")
         .order("created_at", { ascending: false });
 
+      console.log("Query result:", { customers, error });
+
       if (error) {
         console.error("Error loading customers:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
         return;
       }
 
-      console.log("Loaded customers:", customers?.length || 0);
-      setData((customers as unknown as Customer[]) || []);
+      console.log("Loaded customers:", customers?.length ?? 0);
+      console.log("Customer data:", customers);
+      setData((customers as unknown as Customer[]) ?? []);
     } catch (error) {
       console.error("Error loading customers:", error);
     } finally {
