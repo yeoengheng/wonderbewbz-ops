@@ -44,8 +44,34 @@ export function DataTableWrapper<TData, TValue>({
 }: DataTableWrapperProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+
+  // Generate a storage key based on the table's columns (to handle different tables)
+  const storageKey = React.useMemo(() => {
+    const columnIds = columns.map((col) => (col as any).accessorKey ?? (col as any).id).join("-");
+    return `table-visibility-${columnIds.substring(0, 50)}`;
+  }, [columns]);
+
+  // Load column visibility from localStorage
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Save column visibility to localStorage whenever it changes
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(columnVisibility));
+    } catch (error) {
+      console.warn("Failed to save column visibility:", error);
+    }
+  }, [columnVisibility, storageKey]);
 
   const table = useReactTable({
     data,
