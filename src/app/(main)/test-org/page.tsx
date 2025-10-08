@@ -20,7 +20,8 @@ export default async function TestOrgPage() {
   // Get all org IDs in customers table (to see if RLS is filtering)
   const { data: allOrgIds } = await supabase.from("customers").select("org_id").limit(100);
 
-  const uniqueOrgIds = allOrgIds ? [...new Set(allOrgIds.map((c) => c.org_id))] : [];
+  const uniqueOrgIds =
+    allOrgIds && Array.isArray(allOrgIds) ? [...new Set(allOrgIds.map((c) => (c as { org_id: string }).org_id))] : [];
 
   return (
     <div className="space-y-6 p-6">
