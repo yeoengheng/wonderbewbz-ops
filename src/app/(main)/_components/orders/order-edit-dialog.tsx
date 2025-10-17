@@ -29,7 +29,7 @@ type OrderWithCustomer = Order & { customer: Customer; machine_runs?: MachineRun
 const orderSchema = z.object({
   shopify_order_id: z.string().min(1, "Order ID is required"),
   customer_id: z.string().min(1, "Customer is required"),
-  status: z.enum(["pending", "processing", "completed"]),
+  status: z.enum(["pending", "processing", "completed", "delivered"]),
   shipping_addr_1: z.string().optional(),
   shipping_addr_2: z.string().optional(),
   postal_code: z.string().optional(),
@@ -91,7 +91,7 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
         form.reset({
           shopify_order_id: order.shopify_order_id,
           customer_id: order.customer_id,
-          status: order.status as "pending" | "processing" | "completed",
+          status: order.status as "pending" | "processing" | "completed" | "delivered",
           shipping_addr_1: order.shipping_addr_1 ?? "",
           shipping_addr_2: order.shipping_addr_2 ?? "",
           postal_code: order.postal_code ?? "",
@@ -222,6 +222,7 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="processing">Processing</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="delivered">Delivered</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -1,4 +1,4 @@
-export type OrderStatus = "pending" | "processing" | "completed";
+export type OrderStatus = "pending" | "processing" | "completed" | "delivered";
 export type MachineRunStatus =
   | "milk_arrived"
   | "pending"

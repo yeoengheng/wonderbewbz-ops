@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-import { Plus, CheckCircle2, Clock, Package2 } from "lucide-react";
+import { Plus, CheckCircle2, Clock, Package2, Truck } from "lucide-react";
 
 import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
 import { DataTableWrapper } from "@/components/data-table/data-table-wrapper";
@@ -172,6 +172,11 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
       label: "Completed",
       value: "completed",
       icon: CheckCircle2,
+    },
+    {
+      label: "Delivered",
+      value: "delivered",
+      icon: Truck,
     },
   ];
 

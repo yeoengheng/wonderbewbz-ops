@@ -72,6 +72,11 @@ export const createOrderColumns = ({
           variant: "default" as const,
           className: "bg-black text-white hover:bg-gray-900",
         },
+        delivered: {
+          label: "Delivered",
+          variant: "default" as const,
+          className: "bg-green-600 text-white hover:bg-green-700",
+        },
       };
 
       const config = statusConfig[status as keyof typeof statusConfig] ?? statusConfig.pending;
