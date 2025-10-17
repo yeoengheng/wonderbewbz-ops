@@ -125,12 +125,13 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
 
   const data = form.watch();
 
+  // eslint-disable-next-line complexity
   const getBasicInfo = (mr: MachineRun) => ({
     mamaName: mr.mama_name ?? "",
     mamaNric: mr.mama_nric ?? "",
     dateExpressed: mr.date_received ?? "",
     runNumber: mr.run_number?.toString() ?? "",
-    machineRun: "", // This will be used for the new Machine field
+    machineRun: mr.machine_run ?? "",
     status: mr.status ?? "milk_arrived",
     dateProcessed: mr.date_processed ?? "",
     datePacked: mr.date_packed ?? "",
@@ -409,6 +410,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     return existingRuns && existingRuns.length > 0 ? (existingRuns[0] as { run_number: number }).run_number + 1 : 1;
   };
 
+  // eslint-disable-next-line complexity
   const buildMachineRunData = () => ({
     status: data.status as
       | "milk_arrived"
@@ -424,6 +426,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     date_processed: data.dateProcessed || undefined,
     date_packed: data.datePacked || undefined,
     remarks: data.remarks || undefined,
+    machine_run: data.machineRun || undefined,
     bags_weight_g: data.bagsWeight ? parseFloat(data.bagsWeight) : undefined,
     powder_weight_g: data.powderWeight ? parseFloat(data.powderWeight) : undefined,
     packing_requirements_ml: data.packingRequirements ? parseFloat(data.packingRequirements) : undefined,

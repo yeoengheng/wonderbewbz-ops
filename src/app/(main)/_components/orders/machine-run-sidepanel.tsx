@@ -56,7 +56,7 @@ function OrderInfoSection({ machineRun }: { machineRun: MachineRun }) {
             <span className="text-sm font-medium">{machineRun.mama_nric ?? "-"}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Date Expressed</span>
+            <span className="text-muted-foreground text-sm">Date Received</span>
             <span className="text-sm font-medium">{machineRun.date_received ?? "-"}</span>
           </div>
           <div className="flex items-center justify-between">
