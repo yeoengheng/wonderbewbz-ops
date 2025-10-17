@@ -11,7 +11,7 @@ Ensure the information layout is intuitive, following a tabbed design.
 Lay the groundwork for future enhancements (e.g., edit functionality, inputs, and bag details).
 
 3. Scope
-3.1 Trigger
+   3.1 Trigger
 
 Users will see a table that contains a column named Machine Runs.
 

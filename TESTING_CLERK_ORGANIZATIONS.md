@@ -33,6 +33,7 @@ ORDER BY tablename, policyname;
 ```
 
 **Expected Results:**
+
 - ✅ All tables should have `org_id TEXT` column with `get_current_org_id()` default
 - ✅ Function `get_current_org_id` should exist
 - ✅ All tables should have `rowsecurity = true`
@@ -64,12 +65,14 @@ GROUP BY org_id;
 ```
 
 **Expected Results:**
+
 - ✅ All `*_null` counts should be 0
 - ✅ You should see your org ID `org_33m8qoYBwwR9Hg46aQPM2roD9nt` with record counts
 
 ## Step 3: Test JWT Token Configuration
 
 ### In Clerk Dashboard:
+
 1. Go to **JWT Templates** → **Supabase** template
 2. Click **Test** or **Preview**
 3. Verify the JWT includes:
@@ -83,6 +86,7 @@ GROUP BY org_id;
    ```
 
 ### In Supabase SQL Editor:
+
 ```sql
 -- Test if JWT function can extract org_id (run while authenticated in your app)
 SELECT public.get_current_org_id() as current_org_id;
@@ -92,23 +96,27 @@ SELECT current_setting('request.jwt.claims', true)::json as jwt_claims;
 ```
 
 **Expected Results:**
+
 - ✅ `current_org_id` should return your org ID when logged in
 - ✅ `jwt_claims` should show the full JWT with org_id
 
 ## Step 4: Test Application Authentication Flow
 
 ### Test 1: Login Without Organization
+
 1. Create a new test user in Clerk (don't add to any org)
 2. Try to login to your app
 3. **Expected**: User should be redirected to `/select-organization`
 
 ### Test 2: Create Organization
+
 1. From `/select-organization`, click **Create Organization**
 2. Enter a name and create it
 3. **Expected**: Redirected to `/` (dashboard)
 4. **Expected**: Organization switcher in header shows the new org
 
 ### Test 3: Organization Switcher
+
 1. Create a second organization in Clerk
 2. In your app header, click the organization switcher
 3. Switch between organizations
@@ -117,12 +125,14 @@ SELECT current_setting('request.jwt.claims', true)::json as jwt_claims;
 ## Step 5: Test Data Isolation (Most Important!)
 
 ### Test 5.1: Create Test Data in Org 1
+
 1. Login as user in Organization 1
 2. Create a test customer:
    - Name: "Test Customer Org 1"
 3. Note the customer appears in the list
 
 ### Test 5.2: Verify Data Isolation
+
 1. Switch to Organization 2 (or create a second org)
 2. Go to customers page
 3. **Expected**: "Test Customer Org 1" should NOT be visible
@@ -130,7 +140,9 @@ SELECT current_setting('request.jwt.claims', true)::json as jwt_claims;
 5. **Expected**: Only "Test Customer Org 2" is visible
 
 ### Test 5.3: Verify Database Records
+
 Run in Supabase SQL Editor:
+
 ```sql
 -- Check org_id is being set correctly on new records
 SELECT customer_id, name, org_id, created_at
@@ -140,6 +152,7 @@ LIMIT 10;
 ```
 
 **Expected Results:**
+
 - ✅ Each customer should have the correct `org_id`
 - ✅ Data created in Org 1 has Org 1's ID
 - ✅ Data created in Org 2 has Org 2's ID
@@ -147,20 +160,25 @@ LIMIT 10;
 ## Step 6: Test RLS Enforcement
 
 ### Test 6.1: Direct Database Query (Should Fail)
+
 Try to query data directly without org context:
+
 ```sql
 -- This should return NO ROWS when run as authenticated user (RLS blocks it)
 SELECT * FROM customers WHERE org_id != public.get_current_org_id();
 ```
 
 ### Test 6.2: Service Role Bypass (Should Work)
+
 Using the service role key:
+
 ```sql
 -- This should return ALL rows (service role bypasses RLS)
 SELECT customer_id, name, org_id FROM customers;
 ```
 
 **Expected Results:**
+
 - ✅ Regular authenticated queries only see their org's data
 - ✅ Service role queries see all data
 
@@ -169,6 +187,7 @@ SELECT customer_id, name, org_id FROM customers;
 For each entity (Customers, Orders, Machine Runs):
 
 ### Create Test
+
 1. Login to Org 1
 2. Create a new record
 3. Verify it appears in the list
@@ -176,22 +195,26 @@ For each entity (Customers, Orders, Machine Runs):
 5. **Expected**: Record has correct `org_id`
 
 ### Read Test
+
 1. Switch to Org 2
 2. Try to view the record created in Org 1
 3. **Expected**: Record is NOT visible (404 or not in list)
 
 ### Update Test
+
 1. In Org 1, edit the record
 2. Verify changes are saved
 3. **Expected**: No errors
 
 ### Delete Test (Optional)
+
 1. Delete the test record
 2. **Expected**: Record is deleted from Org 1 only
 
 ## Step 8: Test Error Cases
 
 ### Test 8.1: No Organization
+
 1. Logout
 2. Create new user in Clerk
 3. Don't add to any organization
@@ -200,7 +223,9 @@ For each entity (Customers, Orders, Machine Runs):
 6. **Expected**: Cannot access `/` or other routes
 
 ### Test 8.2: Invalid Organization
+
 In your application code, temporarily log the org context:
+
 ```typescript
 // In any server component
 import { auth } from "@clerk/nextjs/server";
@@ -230,6 +255,7 @@ WHERE schemaname = 'public'
 ```
 
 **Expected Results:**
+
 - ✅ Queries should use `idx_customers_org_id` index
 - ✅ EXPLAIN should show "Index Scan" not "Seq Scan"
 
@@ -251,26 +277,34 @@ Run through a complete workflow:
 ## Common Issues & Solutions
 
 ### Issue: "User not associated with any organization"
+
 **Solution:**
+
 - Verify user is member of an organization in Clerk Dashboard
 - Check JWT template includes `org_id` claim
 - Verify Clerk integration is enabled in Supabase
 
 ### Issue: Can see data from other organizations
+
 **Solution:**
+
 - Check RLS is enabled: `SELECT * FROM pg_tables WHERE tablename = 'customers';`
 - Verify policies exist: `SELECT * FROM pg_policies WHERE tablename = 'customers';`
 - Test JWT function: `SELECT public.get_current_org_id();`
 - Check Supabase receives JWT: Look at headers in network tab
 
 ### Issue: Cannot create/update records
+
 **Solution:**
+
 - Check `org_id` default is set: `SELECT column_default FROM information_schema.columns WHERE table_name = 'customers' AND column_name = 'org_id';`
 - Verify INSERT policy exists with WITH CHECK clause
 - Test function: `SELECT public.get_current_org_id();` should return your org ID
 
 ### Issue: Organization switcher not appearing
+
 **Solution:**
+
 - Check user is member of multiple organizations
 - Verify `OrganizationSwitcher` component is imported from `@clerk/nextjs`
 - Clear browser cache and cookies
@@ -293,6 +327,7 @@ Your implementation is working correctly when:
 ## Reporting Results
 
 After testing, document:
+
 1. Which tests passed ✅
 2. Which tests failed ❌
 3. Any unexpected behavior

@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-import { Plus } from "lucide-react";
+import { Plus, CheckCircle2, Clock, Package2 } from "lucide-react";
 
+import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
 import { DataTableWrapper } from "@/components/data-table/data-table-wrapper";
 import { Button } from "@/components/ui/button";
 import { useSupabase } from "@/hooks/use-supabase";
@@ -156,6 +157,24 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
     loadOrders(); // Refresh data
   };
 
+  const statusOptions = [
+    {
+      label: "Pending",
+      value: "pending",
+      icon: Clock,
+    },
+    {
+      label: "Processing",
+      value: "processing",
+      icon: Package2,
+    },
+    {
+      label: "Completed",
+      value: "completed",
+      icon: CheckCircle2,
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -175,6 +194,9 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
         loading={loading}
         searchKey="shopify_order_id"
         searchPlaceholder="Search orders..."
+        toolbar={(table) => (
+          <DataTableFacetedFilter column={table.getColumn("status")} title="Status" options={statusOptions} />
+        )}
       />
 
       <OrderEditDialog

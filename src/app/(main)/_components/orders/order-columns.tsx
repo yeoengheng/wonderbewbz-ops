@@ -61,14 +61,29 @@ export const createOrderColumns = ({
       const status = row.getValue("status");
 
       const statusConfig = {
-        pending: { label: "Pending", variant: "secondary" as const },
-        processing: { label: "Processing", variant: "default" as const },
-        completed: { label: "Completed", variant: "outline" as const },
+        pending: { label: "Pending", variant: "secondary" as const, className: undefined },
+        processing: {
+          label: "Processing",
+          variant: "default" as const,
+          className: "bg-blue-600 text-white hover:bg-blue-700",
+        },
+        completed: {
+          label: "Completed",
+          variant: "default" as const,
+          className: "bg-black text-white hover:bg-gray-900",
+        },
       };
 
       const config = statusConfig[status as keyof typeof statusConfig] ?? statusConfig.pending;
 
-      return <Badge variant={config.variant}>{config.label}</Badge>;
+      return (
+        <Badge variant={config.variant} className={config.className}>
+          {config.label}
+        </Badge>
+      );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
     },
   },
   {

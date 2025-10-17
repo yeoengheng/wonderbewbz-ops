@@ -51,14 +51,14 @@ Prompt to optionally edit remarks.
 
 Data Schema
 New Table: cross_checks
-Column	Type	Description
-cross_check_id	uuid	Primary key.
-machine_run_id	uuid	Foreign key → machine_runs(machine_run_id).
-powder_weight_g	numeric	User input for per-unit powder weight.
-quantity	int4	User input for quantity.
-created_at	timestamptz	Timestamp for creation.
-updated_at	timestamptz	Timestamp for update.
-user_id	text	Operator who entered data.
+Column Type Description
+cross_check_id uuid Primary key.
+machine_run_id uuid Foreign key → machine_runs(machine_run_id).
+powder_weight_g numeric User input for per-unit powder weight.
+quantity int4 User input for quantity.
+created_at timestamptz Timestamp for creation.
+updated_at timestamptz Timestamp for update.
+user_id text Operator who entered data.
 
 ⚠️ Note: No derived values (total_weight_g, combined_total_g) are stored in the DB. These are always calculated live.
 

@@ -82,6 +82,7 @@ psql $DATABASE_URL -f supabase/migrations/011_migrate_existing_data_to_org.sql
 ```
 
 **IMPORTANT**: Before running migration 011:
+
 1. Create your first organization in Clerk
 2. Copy the organization ID (format: `org_xxxxxxxxxxxxxxxxxxxxx`)
 3. Update the `DEFAULT_ORG_ID` variable in `011_migrate_existing_data_to_org.sql`
@@ -132,6 +133,7 @@ NEXT_PUBLIC_CLERK_HIDE_PERSONAL=true
 ### Issue: "User not associated with any organization"
 
 **Solution**:
+
 - Make sure the user is a member of at least one organization
 - Check if the user was redirected to `/select-organization`
 - Verify JWT template includes `org_id` claim
@@ -139,6 +141,7 @@ NEXT_PUBLIC_CLERK_HIDE_PERSONAL=true
 ### Issue: "RLS policies blocking queries"
 
 **Solution**:
+
 - Verify Clerk integration is enabled in Supabase (should show as "Enabled")
 - Check domain matches exactly in Supabase settings
 - Ensure user is part of an organization (check `auth.jwt()->>'org_id'`)
@@ -148,6 +151,7 @@ NEXT_PUBLIC_CLERK_HIDE_PERSONAL=true
 ### Issue: "Cannot see any data after migration"
 
 **Solution**:
+
 - Check if existing records have `org_id` populated
 - Run: `SELECT COUNT(*) FROM customers WHERE org_id IS NULL;`
 - Re-run migration script with correct organization ID
@@ -155,6 +159,7 @@ NEXT_PUBLIC_CLERK_HIDE_PERSONAL=true
 ### Issue: "Organization switcher not showing"
 
 **Solution**:
+
 - Verify `OrganizationSwitcher` component is imported from `@clerk/nextjs`
 - Check user is part of multiple organizations
 - Clear browser cache and cookies
@@ -185,6 +190,7 @@ Before deploying to production:
 ## Support
 
 If you encounter issues:
+
 1. Check Clerk Dashboard logs
 2. Check Supabase logs
 3. Verify JWT claims using [jwt.io](https://jwt.io)

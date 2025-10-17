@@ -30,6 +30,7 @@ interface DataTableWrapperProps<TData, TValue> {
   dndEnabled?: boolean;
   onReorder?: (newData: TData[]) => void;
   enableRowSelection?: boolean;
+  toolbar?: (table: any) => React.ReactNode;
 }
 
 export function DataTableWrapper<TData, TValue>({
@@ -41,6 +42,7 @@ export function DataTableWrapper<TData, TValue>({
   dndEnabled = false,
   onReorder,
   enableRowSelection = false,
+  toolbar,
 }: DataTableWrapperProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -99,14 +101,17 @@ export function DataTableWrapper<TData, TValue>({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        {searchKey && (
-          <Input
-            placeholder={searchPlaceholder}
-            value={(table.getColumn(searchKey as string)?.getFilterValue() as string) ?? ""}
-            onChange={(event) => table.getColumn(searchKey as string)?.setFilterValue(event.target.value)}
-            className="max-w-sm"
-          />
-        )}
+        <div className="flex flex-1 items-center space-x-2">
+          {searchKey && (
+            <Input
+              placeholder={searchPlaceholder}
+              value={(table.getColumn(searchKey as string)?.getFilterValue() as string) ?? ""}
+              onChange={(event) => table.getColumn(searchKey as string)?.setFilterValue(event.target.value)}
+              className="max-w-sm"
+            />
+          )}
+          {toolbar?.(table)}
+        </div>
         <DataTableViewOptions table={table} />
       </div>
       <div className="rounded-md border">
