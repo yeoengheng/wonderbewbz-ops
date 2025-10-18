@@ -557,7 +557,35 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     }
   };
 
+  // eslint-disable-next-line complexity
+  const hasChanges = () => {
+    // Check if any form fields have been filled
+    return (
+      data.mamaName.trim() !== "" ||
+      data.mamaNric.trim() !== "" ||
+      data.dateExpressed.trim() !== "" ||
+      data.machineRun.trim() !== "" ||
+      data.dateProcessed.trim() !== "" ||
+      data.datePacked.trim() !== "" ||
+      data.remarks.trim() !== "" ||
+      data.bags.length > 0 ||
+      data.bagsWeight.trim() !== "" ||
+      data.powderWeight.trim() !== "" ||
+      data.packingRequirements.trim() !== "" ||
+      data.waterToAdd.trim() !== "" ||
+      data.waterActivityLevel.trim() !== "" ||
+      data.gramRatioStaffInput.trim() !== "" ||
+      data.crossChecks.length > 0
+    );
+  };
+
   const handleCancel = () => {
+    if (hasChanges()) {
+      if (!confirm("Are you sure you want to exit? All changes will be lost.")) {
+        return;
+      }
+    }
+
     form.reset(initialData);
     setCurrentStep(1);
     setBagCounter(0);
@@ -566,8 +594,25 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     onOpenChange(false);
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Dialog is trying to close
+      if (hasChanges()) {
+        if (!confirm("Are you sure you want to exit? All changes will be lost.")) {
+          return;
+        }
+      }
+      form.reset(initialData);
+      setCurrentStep(1);
+      setBagCounter(0);
+      setCrossCheckCounter(0);
+      setInitialized(false);
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="max-h-[90vh] max-w-[calc(100%-2rem)] overflow-y-auto sm:max-w-2xl md:max-w-4xl lg:max-w-6xl"
         onInteractOutside={(e) => {
