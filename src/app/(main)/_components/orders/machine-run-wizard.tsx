@@ -628,6 +628,10 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
               {editingMachineRun ? "Edit Machine Run" : "Create Machine Run"}
             </DialogTitle>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={handlePrevious} disabled={currentStep === 1}>
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Previous
+              </Button>
               {currentStep < 3 ? (
                 <Button onClick={handleNext} disabled={!canProceed()}>
                   Next

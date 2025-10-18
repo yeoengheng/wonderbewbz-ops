@@ -197,6 +197,11 @@ export function Step2({
 
   return (
     <div className="space-y-6">
+      <div className="text-center">
+        <h3 className="mb-2 text-lg font-semibold">Individual Bags</h3>
+        <p className="text-muted-foreground text-sm">Group bags by date and add weights for each bag</p>
+      </div>
+
       {/* Summary Card */}
       <Card className="border-muted bg-muted/30">
         <CardHeader>

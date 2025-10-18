@@ -49,11 +49,6 @@ export function IndividualBagsSection({
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="mb-2 text-lg font-semibold">Individual Bags</h3>
-        <p className="text-muted-foreground text-sm">Group bags by date and add weights for each bag</p>
-      </div>
-
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div className="space-y-6 lg:col-span-2">
           {/* Date Groups */}
