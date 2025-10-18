@@ -1,16 +1,24 @@
+/* eslint-disable max-lines */
 "use client";
 
-import { Beaker } from "lucide-react";
+import { Beaker, Scale } from "lucide-react";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import type { Database } from "@/types/database";
 
 import { FinalCrossCheckSection } from "./final-cross-check-section";
 import { IndividualBagsSection } from "./individual-bags-section";
 import { MachineRunOutputs } from "./machine-run-outputs";
+
+type Order = Database["public"]["Tables"]["orders"]["Row"];
+type Customer = Database["public"]["Tables"]["customers"]["Row"];
+type MachineRun = Database["public"]["Tables"]["machine_runs"]["Row"];
+type OrderWithCustomer = Order & { customer: Customer; machine_runs?: MachineRun[] };
 
 interface IndividualBag {
   id: string;
@@ -156,6 +164,7 @@ export function Step1({ data, updateData }: { data: WizardData; updateData: (upd
 
 export function Step2({
   data,
+  order,
   addBagToDate,
   updateBag,
   removeBag,
@@ -163,21 +172,83 @@ export function Step2({
   updateDateGroupDate,
 }: {
   data: WizardData;
+  order: OrderWithCustomer;
   addBagToDate: (date: string) => void;
   updateBag: (id: string, field: keyof Omit<IndividualBag, "id">, value: string) => void;
   removeBag: (id: string) => void;
   addDateGroup: () => void;
   updateDateGroupDate: (oldDate: string, newDate: string) => void;
 }) {
+  // Calculate total weight from all saved machine runs
+  const machineRuns = order.machine_runs ?? [];
+
+  // Get all individual bags from all machine runs
+  const calculateMachineRunBagWeights = () => {
+    // In a real implementation, you'd fetch individual_bags for each machine run
+    // For now, we'll use bags_weight_g from the machine run itself as a placeholder
+    return machineRuns.map((run) => ({
+      runNumber: run.run_number,
+      totalWeight: run.bags_weight_g ?? 0,
+    }));
+  };
+
+  const machineRunWeights = calculateMachineRunBagWeights();
+  const totalSavedBagsWeight = machineRunWeights.reduce((sum, mr) => sum + mr.totalWeight, 0);
+
   return (
-    <IndividualBagsSection
-      data={data}
-      addBagToDate={addBagToDate}
-      updateBag={updateBag}
-      removeBag={removeBag}
-      addDateGroup={addDateGroup}
-      updateDateGroupDate={updateDateGroupDate}
-    />
+    <div className="space-y-6">
+      {/* Summary Card */}
+      <Card className="border-muted bg-muted/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Scale className="h-4 w-4" />
+            Weight Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3">
+            {/* Order Arrival Weight */}
+            <div className="bg-background flex items-center justify-between rounded-lg border p-3">
+              <span className="text-muted-foreground text-sm">Order Arrival Weight</span>
+              <span className="font-mono text-sm font-medium">
+                {order.arrival_weight ? `${order.arrival_weight}g` : "-"}
+              </span>
+            </div>
+
+            {/* Total Saved Bags Weight */}
+            <div className="bg-background flex items-center justify-between rounded-lg border p-3">
+              <span className="text-muted-foreground text-sm">Total Weight (All Saved Runs)</span>
+              <span className="font-mono text-sm font-semibold">{totalSavedBagsWeight}g</span>
+            </div>
+
+            {/* Breakdown by Machine Run */}
+            {machineRunWeights.length > 0 && (
+              <div className="space-y-2 pt-2">
+                <span className="text-muted-foreground text-xs font-medium uppercase">Breakdown by Run</span>
+                <div className="space-y-1">
+                  {machineRunWeights.map((mr) => (
+                    <div key={mr.runNumber} className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Run {mr.runNumber}</span>
+                      <span className="font-mono">{mr.totalWeight}g</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Individual Bags Section */}
+      <IndividualBagsSection
+        data={data}
+        addBagToDate={addBagToDate}
+        updateBag={updateBag}
+        removeBag={removeBag}
+        addDateGroup={addDateGroup}
+        updateDateGroupDate={updateDateGroupDate}
+      />
+    </div>
   );
 }
 

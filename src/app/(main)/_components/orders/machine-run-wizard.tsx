@@ -678,6 +678,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
             {currentStep === 2 && (
               <Step2
                 data={data}
+                order={order}
                 addBagToDate={addBagToDate}
                 updateBag={updateBag}
                 removeBag={removeBag}
