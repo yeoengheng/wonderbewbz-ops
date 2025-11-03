@@ -10,6 +10,10 @@ interface IndividualBag {
   weight: string;
 }
 
+const isWeightEmpty = (weight: string): boolean => {
+  return !weight || weight.trim() === "" || parseFloat(weight) === 0;
+};
+
 const isWeightOutOfRange = (weight: string): boolean => {
   const weightNum = parseFloat(weight);
   return !isNaN(weightNum) && weightNum > 0 && (weightNum < 30 || weightNum > 400);
@@ -71,6 +75,7 @@ export function IndividualBagsSection({
                   {/* Bags for this date */}
                   <div className="grid grid-cols-2 gap-3">
                     {bags.map((bag) => {
+                      const isEmpty = isWeightEmpty(bag.weight);
                       const outOfRange = isWeightOutOfRange(bag.weight);
                       return (
                         <div key={bag.id} className="space-y-1">
@@ -81,7 +86,7 @@ export function IndividualBagsSection({
                                 placeholder="0"
                                 value={bag.weight}
                                 onChange={(e) => updateBag(bag.id, "weight", e.target.value)}
-                                className={`pr-6 ${outOfRange ? "border-yellow-500" : ""}`}
+                                className={`pr-6 ${isEmpty ? "border-red-500 bg-red-50" : outOfRange ? "border-yellow-500" : ""}`}
                               />
                               <span className="text-muted-foreground absolute top-1/2 right-2 -translate-y-1/2 text-sm">
                                 g
@@ -96,7 +101,13 @@ export function IndividualBagsSection({
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                          {outOfRange && (
+                          {isEmpty && (
+                            <div className="flex items-center gap-1 text-xs font-medium text-red-600">
+                              <AlertTriangle className="h-3 w-3" />
+                              <span>Weight required</span>
+                            </div>
+                          )}
+                          {!isEmpty && outOfRange && (
                             <div className="flex items-center gap-1 text-xs text-yellow-600">
                               <AlertTriangle className="h-3 w-3" />
                               <span>Are you sure? (Expected: 30-400g)</span>
