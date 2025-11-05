@@ -128,7 +128,7 @@ export function SidepanelIndividualBags({ machineRun }: SidepanelIndividualBagsP
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Date Total:</span>
                     <span className="font-mono font-medium">
-                      {bags.reduce((sum, bag) => sum + (bag.weight_g ?? 0), 0)}g
+                      {bags.reduce((sum, bag) => sum + (bag.weight_g ?? 0), 0).toFixed(1)}g
                     </span>
                   </div>
                 </div>
@@ -141,7 +141,7 @@ export function SidepanelIndividualBags({ machineRun }: SidepanelIndividualBagsP
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Total Weight:</span>
               <span className="font-mono text-sm font-bold">
-                {individualBags.reduce((sum, bag) => sum + (bag.weight_g ?? 0), 0)}g
+                {individualBags.reduce((sum, bag) => sum + (bag.weight_g ?? 0), 0).toFixed(1)}g
               </span>
             </div>
           </div>
