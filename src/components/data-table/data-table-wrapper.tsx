@@ -91,6 +91,7 @@ export function DataTableWrapper<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: setPagination,
+    autoResetPageIndex: false, // Don't reset to page 1 when data changes
     state: {
       sorting,
       columnFilters,
