@@ -212,7 +212,7 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -236,7 +236,7 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
                 render={({ field }) => (
                   <FormItem className="col-span-2">
                     <FormLabel>Customer *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select customer" />
