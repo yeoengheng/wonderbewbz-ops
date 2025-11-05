@@ -179,21 +179,13 @@ export function Step2({
   addDateGroup: () => void;
   updateDateGroupDate: (oldDate: string, newDate: string) => void;
 }) {
-  // Calculate total weight from all saved machine runs
-  const machineRuns = order.machine_runs ?? [];
-
-  // Get all individual bags from all machine runs
-  const calculateMachineRunBagWeights = () => {
-    // In a real implementation, you'd fetch individual_bags for each machine run
-    // For now, we'll use bags_weight_g from the machine run itself as a placeholder
-    return machineRuns.map((run) => ({
-      runNumber: run.run_number,
-      totalWeight: run.bags_weight_g ?? 0,
-    }));
-  };
-
-  const machineRunWeights = calculateMachineRunBagWeights();
-  const totalSavedBagsWeight = machineRunWeights.reduce((sum, mr) => sum + mr.totalWeight, 0);
+  // Calculate total weight and count from bags inputted in current page
+  const currentBags = data.bags;
+  const totalCurrentBagsWeight = currentBags.reduce((sum, bag) => {
+    const weight = parseFloat(bag.weight) || 0;
+    return sum + weight;
+  }, 0);
+  const totalBagCount = currentBags.length;
 
   return (
     <div className="space-y-6">
@@ -220,26 +212,17 @@ export function Step2({
               </span>
             </div>
 
-            {/* Total Saved Bags Weight */}
+            {/* Total Current Bags Weight */}
             <div className="bg-background flex items-center justify-between rounded-lg border p-3">
-              <span className="text-muted-foreground text-sm">Total Weight (All Saved Runs)</span>
-              <span className="font-mono text-sm font-semibold">{totalSavedBagsWeight}g</span>
+              <span className="text-muted-foreground text-sm">Total Weight (Current Bags)</span>
+              <span className="font-mono text-sm font-semibold">{totalCurrentBagsWeight}g</span>
             </div>
 
-            {/* Breakdown by Machine Run */}
-            {machineRunWeights.length > 0 && (
-              <div className="space-y-2 pt-2">
-                <span className="text-muted-foreground text-xs font-medium uppercase">Breakdown by Run</span>
-                <div className="space-y-1">
-                  {machineRunWeights.map((mr) => (
-                    <div key={mr.runNumber} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Run {mr.runNumber}</span>
-                      <span className="font-mono">{mr.totalWeight}g</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Total Bag Count */}
+            <div className="bg-background flex items-center justify-between rounded-lg border p-3">
+              <span className="text-muted-foreground text-sm">Total Number of Bags</span>
+              <span className="font-mono text-sm font-semibold">{totalBagCount}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
