@@ -66,6 +66,8 @@ const machineRunSchema = z.object({
   dateProcessed: z.string(),
   datePacked: z.string(),
   remarks: z.string(),
+  handledBy: z.string(),
+  verifiedBy: z.string(),
 
   // Step 2: Individual Bags
   bags: z.array(individualBagSchema).min(1, "At least one bag is required"),
@@ -94,6 +96,8 @@ const initialData: WizardData = {
   dateProcessed: "",
   datePacked: "",
   remarks: "",
+  handledBy: "",
+  verifiedBy: "",
   bags: [],
   bagsWeight: "",
   powderWeight: "",
@@ -136,6 +140,8 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     dateProcessed: mr.date_processed ?? "",
     datePacked: mr.date_packed ?? "",
     remarks: mr.remarks ?? "",
+    handledBy: mr.handled_by ?? "",
+    verifiedBy: mr.verified_by ?? "",
   });
 
   const getWeightData = (mr: MachineRun) => ({
@@ -427,6 +433,8 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     date_packed: data.datePacked || undefined,
     remarks: data.remarks || undefined,
     machine_run: data.machineRun || undefined,
+    handled_by: data.handledBy || undefined,
+    verified_by: data.verifiedBy || undefined,
     bags_weight_g: data.bagsWeight ? parseFloat(data.bagsWeight) : undefined,
     powder_weight_g: data.powderWeight ? parseFloat(data.powderWeight) : undefined,
     packing_requirements_ml: data.packingRequirements ? parseFloat(data.packingRequirements) : undefined,
@@ -568,6 +576,8 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       data.dateProcessed.trim() !== "" ||
       data.datePacked.trim() !== "" ||
       data.remarks.trim() !== "" ||
+      data.handledBy.trim() !== "" ||
+      data.verifiedBy.trim() !== "" ||
       data.bags.length > 0 ||
       data.bagsWeight.trim() !== "" ||
       data.powderWeight.trim() !== "" ||

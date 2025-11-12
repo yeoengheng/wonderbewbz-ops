@@ -43,6 +43,8 @@ interface WizardData {
   dateProcessed: string;
   datePacked: string;
   remarks: string;
+  handledBy: string;
+  verifiedBy: string;
 
   // Step 2: Individual Bags
   bags: IndividualBag[];
@@ -154,6 +156,24 @@ export function Step1({ data, updateData }: { data: WizardData; updateData: (upd
               value={data.remarks}
               onChange={(e) => updateData({ remarks: e.target.value })}
               rows={3}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="handled-by">Handled By</Label>
+            <Input
+              id="handled-by"
+              placeholder="Enter name"
+              value={data.handledBy}
+              onChange={(e) => updateData({ handledBy: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="verified-by">Verified By</Label>
+            <Input
+              id="verified-by"
+              placeholder="Enter name"
+              value={data.verifiedBy}
+              onChange={(e) => updateData({ verifiedBy: e.target.value })}
             />
           </div>
         </div>

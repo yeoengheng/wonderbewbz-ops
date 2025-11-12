@@ -63,6 +63,8 @@ export interface MachineRun {
   gram_ratio_staff_input_ml?: number;
   // Other inputs
   remarks?: string;
+  handled_by?: string;
+  verified_by?: string;
   user_id: string; // Clerk user ID
   org_id: string; // Clerk organization ID for multi-tenant isolation
   created_at: string;
