@@ -2,17 +2,19 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+import type { RowSelectionState } from "@tanstack/react-table";
 import { Plus, CheckCircle2, Clock, Package2, Truck } from "lucide-react";
 
 import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
 import { DataTableWrapper } from "@/components/data-table/data-table-wrapper";
 import { Button } from "@/components/ui/button";
 import { useSupabase } from "@/hooks/use-supabase";
-import type { Database } from "@/types/database";
+import type { Database, OrderStatus } from "@/types/database";
 
 import { MachineRunManagementDialog } from "./machine-run-management-dialog";
 import { MachineRunSidepanel } from "./machine-run-sidepanel";
 import { MachineRunWizard } from "./machine-run-wizard";
+import { OrderBulkActions } from "./order-bulk-actions";
 import { createOrderColumns } from "./order-columns";
 import { OrderEditDialog } from "./order-edit-dialog";
 
@@ -36,6 +38,8 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [selectedOrderForMachineRuns, setSelectedOrderForMachineRuns] = useState<OrderWithCustomer | null>(null);
   const [isMachineRunDialogOpen, setIsMachineRunDialogOpen] = useState(false);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const { supabase, isLoaded } = useSupabase();
 
   const columns = createOrderColumns({
@@ -157,6 +161,63 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
     loadOrders(); // Refresh data
   };
 
+  const handleBulkStatusUpdate = async (newStatus: OrderStatus) => {
+    const selectedIndices = Object.keys(rowSelection).filter((key) => rowSelection[key]);
+    const selectedOrders = selectedIndices.map((index) => data[parseInt(index)]);
+
+    if (selectedOrders.length === 0) {
+      alert("No orders selected");
+      return;
+    }
+
+    const confirmMessage =
+      selectedOrders.length === 1
+        ? `Are you sure you want to change the status of order ${selectedOrders[0].shopify_order_id} to ${newStatus}?`
+        : `Are you sure you want to change the status of ${selectedOrders.length} orders to ${newStatus}?`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setIsUpdatingStatus(true);
+    try {
+      // Update all selected orders
+      const updates = selectedOrders.map((order) =>
+        supabase
+          .from("orders")
+          // @ts-expect-error: Supabase RLS policy causing type inference issue
+          .update({ status: newStatus })
+          .eq("order_id", order.order_id),
+      );
+
+      const results = await Promise.all(updates);
+
+      const errors = results.filter((result) => result.error);
+      if (errors.length > 0) {
+        console.error("Errors updating orders:", errors);
+        alert(`Failed to update ${errors.length} order(s). Please try again.`);
+      } else {
+        // Update local state
+        setData((prev) =>
+          prev.map((order) => {
+            const wasSelected = selectedOrders.some((so) => so.order_id === order.order_id);
+            return wasSelected ? { ...order, status: newStatus } : order;
+          }),
+        );
+
+        // Clear selection
+        setRowSelection({});
+
+        alert(`Successfully updated ${selectedOrders.length} order(s) to ${newStatus}`);
+      }
+    } catch (error) {
+      console.error("Error updating orders:", error);
+      alert("Failed to update orders. Please try again.");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   const statusOptions = [
     {
       label: "Pending",
@@ -180,6 +241,8 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
     },
   ];
 
+  const selectedCount = Object.keys(rowSelection).filter((key) => rowSelection[key]).length;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -199,8 +262,22 @@ export function OrderTable({ initialData = [] }: OrderTableProps) {
         loading={loading}
         searchKey="shopify_order_id"
         searchPlaceholder="Search orders..."
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
         toolbar={(table) => (
-          <DataTableFacetedFilter column={table.getColumn("status")} title="Status" options={statusOptions} />
+          <>
+            {selectedCount > 0 ? (
+              <OrderBulkActions
+                selectedCount={selectedCount}
+                isUpdatingStatus={isUpdatingStatus}
+                onClearSelection={() => setRowSelection({})}
+                onStatusChange={handleBulkStatusUpdate}
+              />
+            ) : (
+              <DataTableFacetedFilter column={table.getColumn("status")} title="Status" options={statusOptions} />
+            )}
+          </>
         )}
       />
 

@@ -5,6 +5,8 @@ import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
+  OnChangeFn,
+  RowSelectionState,
   SortingState,
   VisibilityState,
   getCoreRowModel,
@@ -30,9 +32,12 @@ interface DataTableWrapperProps<TData, TValue> {
   dndEnabled?: boolean;
   onReorder?: (newData: TData[]) => void;
   enableRowSelection?: boolean;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
   toolbar?: (table: any) => React.ReactNode;
 }
 
+// eslint-disable-next-line complexity
 export function DataTableWrapper<TData, TValue>({
   columns,
   data,
@@ -42,15 +47,21 @@ export function DataTableWrapper<TData, TValue>({
   dndEnabled = false,
   onReorder,
   enableRowSelection = false,
+  rowSelection: externalRowSelection,
+  onRowSelectionChange: externalOnRowSelectionChange,
   toolbar,
 }: DataTableWrapperProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [internalRowSelection, setInternalRowSelection] = React.useState({});
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
   });
+
+  // Use external rowSelection if provided, otherwise use internal state
+  const rowSelection = externalRowSelection ?? internalRowSelection;
+  const setRowSelection = externalOnRowSelectionChange ?? setInternalRowSelection;
 
   // Generate a storage key based on the table's columns (to handle different tables)
   const storageKey = React.useMemo(() => {
@@ -72,11 +83,7 @@ export function DataTableWrapper<TData, TValue>({
   // Save column visibility to localStorage whenever it changes
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(columnVisibility));
-    } catch (error) {
-      console.warn("Failed to save column visibility:", error);
-    }
+    localStorage.setItem(storageKey, JSON.stringify(columnVisibility));
   }, [columnVisibility, storageKey]);
 
   const table = useReactTable({
@@ -91,6 +98,7 @@ export function DataTableWrapper<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: setPagination,
+    enableRowSelection: enableRowSelection,
     autoResetPageIndex: false, // Don't reset to page 1 when data changes
     state: {
       sorting,
