@@ -1,6 +1,8 @@
 "use client";
 
-import { Edit } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { AlertTriangle, Edit } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,12 +16,14 @@ import {
 } from "@/components/ui/drawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSupabase } from "@/hooks/use-supabase";
 import type { Database } from "@/types/database";
 
 import { SidepanelCrossChecks } from "./sidepanel-cross-checks";
 import { SidepanelIndividualBags } from "./sidepanel-individual-bags";
 
 type MachineRun = Database["public"]["Tables"]["machine_runs"]["Row"];
+type IndividualBag = Database["public"]["Tables"]["individual_bags"]["Row"];
 
 interface MachineRunSidepanelProps {
   machineRun: MachineRun | null;
@@ -69,7 +73,73 @@ function OrderInfoSection({ machineRun }: { machineRun: MachineRun }) {
   );
 }
 
+function useIndividualBags(machineRunId: string | undefined) {
+  const [individualBags, setIndividualBags] = useState<IndividualBag[]>([]);
+  const { supabase } = useSupabase();
+
+  useEffect(() => {
+    const fetchIndividualBags = async () => {
+      if (!machineRunId) return;
+
+      const { data } = await supabase.from("individual_bags").select("*").eq("machine_run_id", machineRunId);
+
+      setIndividualBags(data ?? []);
+    };
+
+    fetchIndividualBags();
+  }, [machineRunId, supabase]);
+
+  return individualBags;
+}
+
+function calculateWaterContentPercentage(totalWetWeight: number, powderWeight: number): string | null {
+  if (totalWetWeight <= 0 || powderWeight <= 0) return null;
+  return (100 - (powderWeight / totalWetWeight) * 100).toFixed(1);
+}
+
+function isWaterContentOutOfRange(waterContent: string | null): boolean {
+  if (!waterContent) return false;
+  const value = parseFloat(waterContent);
+  return value < 85 || value > 89.5;
+}
+
+function DisplayRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-muted-foreground text-sm">{label}</span>
+      <span className="text-sm font-medium">{value}</span>
+    </div>
+  );
+}
+
+function WaterContentRow({ waterContent }: { waterContent: string | null }) {
+  const isOutOfRange = isWaterContentOutOfRange(waterContent);
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-muted-foreground text-sm">Breastmilk Water Content</span>
+        <span className={`text-sm font-medium ${isOutOfRange ? "font-semibold text-yellow-600" : ""}`}>
+          {waterContent ? `${waterContent}%` : "-"}
+        </span>
+      </div>
+      {isOutOfRange && (
+        <div className="flex items-center justify-end gap-1 text-xs text-yellow-600">
+          <AlertTriangle className="h-3 w-3" />
+          <span>Expected: 85-89.5%</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CalculationsSection({ machineRun }: { machineRun: MachineRun }) {
+  const individualBags = useIndividualBags(machineRun.machine_run_id);
+
+  const totalBagsWeight = individualBags.reduce((sum, bag) => sum + (bag.weight_g ?? 0), 0);
+  const totalWetWeight = totalBagsWeight - (machineRun.bags_weight_g ?? 0);
+  const waterContent = calculateWaterContentPercentage(totalWetWeight, machineRun.powder_weight_g ?? 0);
+
   return (
     <div className="space-y-4">
       <div className="bg-card rounded-lg border">
@@ -77,30 +147,21 @@ function CalculationsSection({ machineRun }: { machineRun: MachineRun }) {
           <h3 className="text-sm font-medium">🧮 Calculations</h3>
         </div>
         <div className="space-y-3 p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Bags Weight</span>
-            <span className="text-sm font-medium">
-              {machineRun.bags_weight_g ? `${machineRun.bags_weight_g}g` : "-"}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Powder Weight</span>
-            <span className="text-sm font-medium">
-              {machineRun.powder_weight_g ? `${machineRun.powder_weight_g}g` : "-"}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Packing Requirements</span>
-            <span className="text-sm font-medium">
-              {machineRun.packing_requirements_ml ? `${machineRun.packing_requirements_ml}ml` : "-"}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Water to Add</span>
-            <span className="text-sm font-medium">
-              {machineRun.label_water_to_add_ml ? `${machineRun.label_water_to_add_ml}ml` : "-"}
-            </span>
-          </div>
+          <DisplayRow label="Total Wet Weight" value={totalWetWeight > 0 ? `${totalWetWeight.toFixed(1)}g` : "-"} />
+          <DisplayRow label="Bags Weight" value={machineRun.bags_weight_g ? `${machineRun.bags_weight_g}g` : "-"} />
+          <DisplayRow
+            label="Powder Weight"
+            value={machineRun.powder_weight_g ? `${machineRun.powder_weight_g}g` : "-"}
+          />
+          <DisplayRow
+            label="Packing Requirements"
+            value={machineRun.packing_requirements_ml ? `${machineRun.packing_requirements_ml}ml` : "-"}
+          />
+          <DisplayRow
+            label="Water to Add"
+            value={machineRun.label_water_to_add_ml ? `${machineRun.label_water_to_add_ml}ml` : "-"}
+          />
+          <WaterContentRow waterContent={waterContent} />
         </div>
       </div>
     </div>
