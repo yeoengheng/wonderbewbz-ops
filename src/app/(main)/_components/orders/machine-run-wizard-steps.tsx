@@ -35,7 +35,6 @@ interface CrossCheck {
 interface WizardData {
   // Step 1: Info
   mamaName: string;
-  mamaNric: string;
   dateExpressed: string;
   runNumber: string;
   machineRun: string;
@@ -110,15 +109,6 @@ export function Step1({ data, updateData }: { data: WizardData; updateData: (upd
               placeholder="Enter mama's name"
               value={data.mamaName}
               onChange={(e) => updateData({ mamaName: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="mama-nric">Mama&apos;s NRIC</Label>
-            <Input
-              id="mama-nric"
-              placeholder="Enter NRIC"
-              value={data.mamaNric}
-              onChange={(e) => updateData({ mamaNric: e.target.value })}
             />
           </div>
           <div className="space-y-2">

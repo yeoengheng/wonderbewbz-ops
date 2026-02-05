@@ -49,7 +49,6 @@ export interface MachineRun {
   // Order Info inputs
   machine_run?: string;
   mama_name?: string;
-  mama_nric?: string;
   date_received?: string;
   date_processed?: string;
   date_packed?: string;

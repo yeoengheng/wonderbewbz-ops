@@ -226,10 +226,6 @@ function MachineRunCard({ machineRun, runLabel, onClick, onEdit, onDelete }: Mac
           <span>{machineRun.mama_name ?? "-"}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-muted-foreground">NRIC</span>
-          <span>{machineRun.mama_nric ?? "-"}</span>
-        </div>
-        <div className="flex justify-between">
           <span className="text-muted-foreground">Date Received</span>
           <span>{machineRun.date_received ?? "-"}</span>
         </div>

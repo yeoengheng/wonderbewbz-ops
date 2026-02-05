@@ -65,7 +65,6 @@ const crossCheckSchema = z.object({
 const machineRunSchema = z.object({
   // Step 1: Info
   mamaName: z.string().min(1, "Mama's name is required"),
-  mamaNric: z.string().min(1, "Mama's NRIC is required"),
   dateExpressed: z.string().min(1, "Date expressed is required"),
   runNumber: z.string(),
   machineRun: z.string(),
@@ -95,7 +94,6 @@ type WizardData = z.infer<typeof machineRunSchema>;
 
 const initialData: WizardData = {
   mamaName: "",
-  mamaNric: "",
   dateExpressed: "",
   runNumber: "",
   machineRun: "",
@@ -147,7 +145,6 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   // eslint-disable-next-line complexity
   const getBasicInfo = (mr: MachineRun) => ({
     mamaName: mr.mama_name ?? "",
-    mamaNric: mr.mama_nric ?? "",
     dateExpressed: mr.date_received ?? "",
     runNumber: mr.run_number?.toString() ?? "",
     machineRun: mr.machine_run ?? "",
@@ -359,8 +356,8 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   };
 
   const validateStep1 = () => {
-    // Base validation: mama name and NRIC required
-    if (!data.mamaName.trim() || !data.mamaNric.trim()) return false;
+    // Base validation: mama name required
+    if (!data.mamaName.trim()) return false;
 
     // Status-based validation
     if (data.status === "milk_arrived" || data.status === "pending") {
@@ -442,7 +439,6 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       | "qa_failed"
       | "cancelled",
     mama_name: data.mamaName,
-    mama_nric: data.mamaNric,
     date_received: data.dateExpressed,
     date_processed: data.dateProcessed || undefined,
     date_packed: data.datePacked || undefined,
@@ -694,7 +690,6 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     // Check if any form fields have been filled
     return (
       data.mamaName.trim() !== "" ||
-      data.mamaNric.trim() !== "" ||
       data.dateExpressed.trim() !== "" ||
       data.machineRun.trim() !== "" ||
       data.dateProcessed.trim() !== "" ||
