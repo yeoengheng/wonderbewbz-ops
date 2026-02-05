@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
+import { BackupRecoveryBanner } from "@/components/ui/backup-recovery-banner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,8 +19,13 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAbortOnUnmount } from "@/hooks/use-abort-on-unmount";
+import { useFormBackup } from "@/hooks/use-form-backup";
 import { useSupabase } from "@/hooks/use-supabase";
+import { verifySave } from "@/lib/database/save-verification";
+import { formatDatabaseError } from "@/lib/error-handling";
 import { cleanupCustomerValues } from "@/lib/form-utils";
+import { retryWithToast } from "@/lib/retry-operation";
 import type { Customer } from "@/types/database";
 
 const customerSchema = z.object({
@@ -42,6 +49,7 @@ interface CustomerEditDialogProps {
 export function CustomerEditDialog({ customer, open, onOpenChange, onSaved }: CustomerEditDialogProps) {
   const [loading, setLoading] = useState(false);
   const { supabase, isLoaded } = useSupabase();
+  const abortSignal = useAbortOnUnmount();
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
@@ -53,6 +61,13 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onSaved }: Cu
       postal_code: "",
       shopify_customer_id: "",
     },
+  });
+
+  const backup = useFormBackup({
+    formType: "customer",
+    recordId: customer?.customer_id ?? null,
+    form,
+    enabled: open,
   });
 
   // Reset form when customer changes or dialog opens
@@ -104,13 +119,64 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onSaved }: Cu
   const onSubmit = async (values: CustomerFormValues) => {
     if (!isLoaded) return;
 
+    // Backup form data before attempting save
+    backup.backupData();
+
     setLoading(true);
     try {
       const cleanedValues = cleanupValues(values);
-      const result = customer ? await updateCustomer(cleanedValues) : await createCustomer(cleanedValues);
-      onSaved(result);
+
+      // Use retry with toast for network resilience
+      const result = await retryWithToast<Customer>(
+        async () => {
+          if (customer) {
+            return await updateCustomer(cleanedValues);
+          } else {
+            return await createCustomer(cleanedValues);
+          }
+        },
+        "Saving customer",
+        { abortSignal },
+      );
+
+      if (!result.success) {
+        const appError = formatDatabaseError(result.error);
+        toast.error("Failed to save customer", {
+          description: appError.message,
+        });
+        return;
+      }
+
+      // Verify the save was successful by re-querying
+      const verification = await verifySave<Customer>({
+        supabase,
+        table: "customers",
+        idField: "customer_id",
+        idValue: result.data!.customer_id,
+      });
+
+      if (!verification.success) {
+        toast.error("Save verification failed", {
+          description: verification.error ?? "The customer may not have been saved correctly.",
+        });
+        return;
+      }
+
+      // Clear backup on successful save
+      backup.clearBackup();
+
+      toast.success(customer ? "Customer updated successfully" : "Customer created successfully");
+      onSaved(verification.data!);
     } catch (error) {
+      // Handle abort
+      if ((error as Error)?.message === "Operation aborted") {
+        return;
+      }
       console.error("Error saving customer:", error);
+      const appError = formatDatabaseError(error);
+      toast.error("Failed to save customer", {
+        description: appError.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -127,6 +193,14 @@ export function CustomerEditDialog({ customer, open, onOpenChange, onSaved }: Cu
               : "Fill in the customer details to create a new customer record."}
           </DialogDescription>
         </DialogHeader>
+
+        {backup.hasBackup && (
+          <BackupRecoveryBanner
+            backupTimestamp={backup.backupTimestamp}
+            onRestore={backup.restoreBackup}
+            onDismiss={backup.dismissBackup}
+          />
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

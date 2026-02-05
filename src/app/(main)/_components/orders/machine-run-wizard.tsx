@@ -6,11 +6,18 @@ import { useState, useEffect, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
+import { BackupRecoveryBanner } from "@/components/ui/backup-recovery-banner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAbortOnUnmount } from "@/hooks/use-abort-on-unmount";
+import { useFormBackup } from "@/hooks/use-form-backup";
 import { useSupabase } from "@/hooks/use-supabase";
+import { verifyMultiTableSave } from "@/lib/database/save-verification";
+import { formatDatabaseError } from "@/lib/error-handling";
+import { retryWithToast } from "@/lib/retry-operation";
 import type { Database } from "@/types/database";
 
 import { Step1, Step2, Step3 } from "./machine-run-wizard-steps";
@@ -115,10 +122,18 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   const [bagCounter, setBagCounter] = useState(0);
   const [initialized, setInitialized] = useState(false);
   const { supabase, isLoaded } = useSupabase();
+  const abortSignal = useAbortOnUnmount();
 
   const form = useForm<WizardData>({
     resolver: zodResolver(machineRunSchema),
     defaultValues: initialData,
+  });
+
+  const backup = useFormBackup({
+    formType: "machine-run",
+    recordId: editingMachineRun?.machine_run_id ?? null,
+    form,
+    enabled: open,
   });
 
   const steps = [
@@ -536,22 +551,122 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     }
   };
 
+  // Helper function to update machine run with rollback protection
+  const updateMachineRunWithRollback = async (machineRunId: string) => {
+    // Backup existing related data first (for potential rollback)
+    const { data: existingBags } = await supabase
+      .from("individual_bags")
+      .select("*")
+      .eq("machine_run_id", machineRunId);
+
+    const { data: existingChecks } = await supabase.from("cross_checks").select("*").eq("machine_run_id", machineRunId);
+
+    try {
+      await updateMachineRun(machineRunId);
+      await updateIndividualBags(machineRunId);
+      await updateCrossChecks(machineRunId);
+      return { machineRunId };
+    } catch (saveError) {
+      // Attempt to restore original data on failure
+      if (existingBags && existingBags.length > 0) {
+        try {
+          await supabase.from("individual_bags").insert(existingBags);
+        } catch {
+          console.error("Failed to restore bags backup");
+        }
+      }
+      if (existingChecks && existingChecks.length > 0) {
+        try {
+          await supabase.from("cross_checks").insert(existingChecks);
+        } catch {
+          console.error("Failed to restore cross checks backup");
+        }
+      }
+      throw saveError;
+    }
+  };
+
+  // Helper function to create new machine run with related records
+  const createMachineRunWithRelated = async () => {
+    const runNumber = await getNextRunNumber();
+    const machineRun = await createMachineRun(runNumber);
+    await createIndividualBags(machineRun.machine_run_id);
+    await createCrossChecks(machineRun.machine_run_id);
+    return { machineRunId: machineRun.machine_run_id };
+  };
+
+  // eslint-disable-next-line complexity
   const handleSave = async () => {
     if (!isLoaded || !order) return;
 
+    // Backup form data before attempting save
+    backup.backupData();
+
     setLoading(true);
     try {
-      if (editingMachineRun) {
-        await updateMachineRun(editingMachineRun.machine_run_id);
-        await updateIndividualBags(editingMachineRun.machine_run_id);
-        await updateCrossChecks(editingMachineRun.machine_run_id);
-      } else {
-        const runNumber = await getNextRunNumber();
-        const machineRun = await createMachineRun(runNumber);
-        await createIndividualBags(machineRun.machine_run_id);
-        await createCrossChecks(machineRun.machine_run_id);
+      // Use retry with toast for network resilience
+      const result = await retryWithToast<{ machineRunId: string }>(
+        async () => {
+          if (editingMachineRun) {
+            return await updateMachineRunWithRollback(editingMachineRun.machine_run_id);
+          } else {
+            return await createMachineRunWithRelated();
+          }
+        },
+        "Saving machine run",
+        { abortSignal },
+      );
+
+      if (!result.success) {
+        const appError = formatDatabaseError(result.error);
+        toast.error("Failed to save machine run", {
+          description: appError.message,
+        });
+        setLoading(false);
+        return;
       }
 
+      const machineRunId = result.data!.machineRunId;
+
+      // Verify the save was successful
+      const verification = await verifyMultiTableSave(supabase, [
+        {
+          table: "machine_runs",
+          idField: "machine_run_id",
+          idValue: machineRunId,
+        },
+        {
+          table: "individual_bags",
+          idField: "machine_run_id",
+          idValue: machineRunId,
+          expectedCount: data.bags.length,
+        },
+        ...(data.crossChecks.length > 0
+          ? [
+              {
+                table: "cross_checks",
+                idField: "machine_run_id",
+                idValue: machineRunId,
+                expectedCount: data.crossChecks.length,
+              },
+            ]
+          : []),
+      ]);
+
+      if (!verification.success) {
+        toast.error("Save verification failed", {
+          description: verification.error ?? "The machine run may not have been saved correctly.",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Clear backup on successful save
+      backup.clearBackup();
+
+      toast.success(editingMachineRun ? "Machine run updated successfully" : "Machine run created successfully");
+
+      // Reset form state only after verified success
       form.reset(initialData);
       setCurrentStep(1);
       setBagCounter(0);
@@ -559,7 +674,16 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       setInitialized(false);
       onComplete();
     } catch (error) {
+      // Handle abort
+      if ((error as Error)?.message === "Operation aborted") {
+        setLoading(false);
+        return;
+      }
       console.error("Error saving machine run:", error);
+      const appError = formatDatabaseError(error);
+      toast.error("Failed to save machine run", {
+        description: appError.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -658,6 +782,14 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
             </div>
           </div>
         </DialogHeader>
+
+        {backup.hasBackup && (
+          <BackupRecoveryBanner
+            backupTimestamp={backup.backupTimestamp}
+            onRestore={backup.restoreBackup}
+            onDismiss={backup.dismissBackup}
+          />
+        )}
 
         {/* Step Indicator */}
         <div className="flex items-center justify-center space-x-8 py-4">

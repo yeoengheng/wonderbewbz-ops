@@ -5,8 +5,10 @@ import { useState, useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
+import { BackupRecoveryBanner } from "@/components/ui/backup-recovery-banner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,8 +22,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAbortOnUnmount } from "@/hooks/use-abort-on-unmount";
+import { useFormBackup } from "@/hooks/use-form-backup";
 import { useSupabase } from "@/hooks/use-supabase";
+import { verifySave } from "@/lib/database/save-verification";
+import { formatDatabaseError } from "@/lib/error-handling";
 import { cleanupOrderValues } from "@/lib/form-utils";
+import { retryWithToast } from "@/lib/retry-operation";
 import type { Order, Customer, MachineRun } from "@/types/database";
 
 type OrderWithCustomer = Order & { customer: Customer; machine_runs?: MachineRun[] };
@@ -53,6 +60,7 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const { supabase, isLoaded } = useSupabase();
+  const abortSignal = useAbortOnUnmount();
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -69,6 +77,13 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
       visual_check: undefined,
       visual_check_remarks: "",
     },
+  });
+
+  const backup = useFormBackup({
+    formType: "order",
+    recordId: order?.order_id ?? null,
+    form,
+    enabled: open,
   });
 
   // Load customers for dropdown
@@ -122,58 +137,91 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
   const onSubmit = async (values: OrderFormValues) => {
     if (!isLoaded) return;
 
+    // Backup form data before attempting save
+    backup.backupData();
+
     setLoading(true);
     try {
       // Clean up empty strings to null for optional fields
       const cleanedValues = cleanupOrderValues(values);
 
-      if (order) {
-        // Update existing order
-        const { data: updatedOrder, error } = await supabase
-          .from("orders")
-          // @ts-expect-error: Supabase RLS policy causing type inference issue
-          .update(cleanedValues)
-          .eq("order_id", order.order_id)
-          .select(
-            `
-            *,
-            customer:customers(*),
-            machine_runs(*)
-          `,
-          )
-          .single();
+      const selectQuery = `
+        *,
+        customer:customers(*),
+        machine_runs(*)
+      `;
 
-        if (error) {
-          console.error("Error updating order:", error);
-          throw error;
-        }
-        console.log("Order updated:", updatedOrder);
-        onSaved(updatedOrder as OrderWithCustomer);
-      } else {
-        // Create new order
-        const { data: newOrder, error } = await supabase
-          .from("orders")
-          // @ts-expect-error: Supabase RLS policy causing type inference issue
-          .insert(cleanedValues)
-          .select(
-            `
-            *,
-            customer:customers(*),
-            machine_runs(*)
-          `,
-          )
-          .single();
+      // Use retry with toast for network resilience
+      const result = await retryWithToast<OrderWithCustomer>(
+        async () => {
+          if (order) {
+            // Update existing order
+            const { data: updatedOrder, error } = await supabase
+              .from("orders")
+              // @ts-expect-error: Supabase RLS policy causing type inference issue
+              .update(cleanedValues)
+              .eq("order_id", order.order_id)
+              .select(selectQuery)
+              .single();
 
-        if (error) {
-          console.error("Error creating order:", error);
-          throw error;
-        }
-        console.log("Order created:", newOrder);
-        onSaved(newOrder as OrderWithCustomer);
+            if (error) throw error;
+            return updatedOrder as OrderWithCustomer;
+          } else {
+            // Create new order
+            const { data: newOrder, error } = await supabase
+              .from("orders")
+              // @ts-expect-error: Supabase RLS policy causing type inference issue
+              .insert(cleanedValues)
+              .select(selectQuery)
+              .single();
+
+            if (error) throw error;
+            return newOrder as OrderWithCustomer;
+          }
+        },
+        "Saving order",
+        { abortSignal },
+      );
+
+      if (!result.success) {
+        const appError = formatDatabaseError(result.error);
+        toast.error("Failed to save order", {
+          description: appError.message,
+        });
+        return;
       }
+
+      // Verify the save was successful by re-querying
+      const verification = await verifySave<OrderWithCustomer>({
+        supabase,
+        table: "orders",
+        idField: "order_id",
+        idValue: result.data!.order_id,
+        selectQuery,
+      });
+
+      if (!verification.success) {
+        toast.error("Save verification failed", {
+          description: verification.error ?? "The order may not have been saved correctly.",
+        });
+        return;
+      }
+
+      // Clear backup on successful save
+      backup.clearBackup();
+
+      toast.success(order ? "Order updated successfully" : "Order created successfully");
+      onSaved(verification.data!);
     } catch (error) {
+      // Handle abort
+      if ((error as Error)?.message === "Operation aborted") {
+        return;
+      }
       console.error("Error saving order:", error);
-      // You could add toast notifications here
+      const appError = formatDatabaseError(error);
+      toast.error("Failed to save order", {
+        description: appError.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -188,6 +236,14 @@ export function OrderEditDialog({ order, open, onOpenChange, onSaved }: OrderEdi
             {order ? "Update the order information below." : "Fill in the order details to create a new order record."}
           </DialogDescription>
         </DialogHeader>
+
+        {backup.hasBackup && (
+          <BackupRecoveryBanner
+            backupTimestamp={backup.backupTimestamp}
+            onRestore={backup.restoreBackup}
+            onDismiss={backup.dismissBackup}
+          />
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
