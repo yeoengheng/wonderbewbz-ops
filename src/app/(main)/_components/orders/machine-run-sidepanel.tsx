@@ -17,6 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSupabase } from "@/hooks/use-supabase";
+import { formatDate } from "@/lib/utils";
 import type { Database } from "@/types/database";
 
 import { SidepanelCrossChecks } from "./sidepanel-cross-checks";
@@ -57,11 +58,11 @@ function OrderInfoSection({ machineRun }: { machineRun: MachineRun }) {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-sm">Date Received</span>
-            <span className="text-sm font-medium">{machineRun.date_received ?? "-"}</span>
+            <span className="text-sm font-medium">{formatDate(machineRun.date_received)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-sm">Date Processed</span>
-            <span className="text-sm font-medium">{machineRun.date_processed ?? "-"}</span>
+            <span className="text-sm font-medium">{formatDate(machineRun.date_processed)}</span>
           </div>
         </div>
       </div>

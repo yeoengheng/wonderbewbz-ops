@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSupabase } from "@/hooks/use-supabase";
+import { formatDate } from "@/lib/utils";
 import type { Database } from "@/types/database";
 
 import { MachineRunWizard } from "./machine-run-wizard";
@@ -227,7 +228,7 @@ function MachineRunCard({ machineRun, runLabel, onClick, onEdit, onDelete }: Mac
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Date Received</span>
-          <span>{machineRun.date_received ?? "-"}</span>
+          <span>{formatDate(machineRun.date_received)}</span>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { Calendar, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSupabase } from "@/hooks/use-supabase";
+import { formatDate } from "@/lib/utils";
 import type { Database } from "@/types/database";
 
 type MachineRun = Database["public"]["Tables"]["machine_runs"]["Row"];
@@ -112,7 +113,7 @@ export function SidepanelIndividualBags({ machineRun }: SidepanelIndividualBagsP
               <CardHeader className="pt-6 pb-4">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <Calendar className="text-muted-foreground h-4 w-4" />
-                  {date !== "Unknown Date" ? new Date(date).toLocaleDateString() : "Unknown Date"}
+                  {date !== "Unknown Date" ? formatDate(date, "Unknown Date") : "Unknown Date"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 pb-6">

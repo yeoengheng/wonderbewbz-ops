@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { formatDate } from "@/lib/utils";
 import type { Database } from "@/types/database";
 
 type Order = Database["public"]["Tables"]["orders"]["Row"];
@@ -212,15 +213,7 @@ export const createOrderColumns = ({
     header: ({ column }) => <DataTableColumnHeader column={column} title="Order Date" />,
     cell: ({ row }) => {
       const date = row.getValue("created_at");
-      return (
-        <div className="text-sm">
-          {new Date(String(date)).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
-        </div>
-      );
+      return <div className="text-sm">{formatDate(String(date))}</div>;
     },
   },
   {
@@ -228,15 +221,7 @@ export const createOrderColumns = ({
     header: ({ column }) => <DataTableColumnHeader column={column} title="Last Updated" />,
     cell: ({ row }) => {
       const date = row.getValue("updated_at");
-      return (
-        <div className="text-muted-foreground text-sm">
-          {new Date(String(date)).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
-        </div>
-      );
+      return <div className="text-muted-foreground text-sm">{formatDate(String(date))}</div>;
     },
   },
   {
