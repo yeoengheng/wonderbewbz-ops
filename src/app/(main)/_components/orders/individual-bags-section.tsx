@@ -2,7 +2,9 @@ import { Calendar, Plus, Trash2, AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface IndividualBag {
   id: string;
@@ -40,12 +42,12 @@ export function IndividualBagsSection({
   addDateGroup,
   updateDateGroupDate,
 }: IndividualBagsSectionProps) {
-  // Group bags by date
+  // Group bags by date; empty string key = "no date" group
   const bagsByDate = data.bags.reduce(
     (acc, bag) => {
-      const date = bag.date || "unassigned";
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(bag);
+      const key = bag.date;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(bag);
       return acc;
     },
     {} as Record<string, IndividualBag[]>,
@@ -56,19 +58,43 @@ export function IndividualBagsSection({
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div className="space-y-6 lg:col-span-2">
           {/* Date Groups */}
-          {Object.entries(bagsByDate)
-            .filter(([date]) => date !== "unassigned")
-            .map(([date, bags]) => (
-              <Card key={date} className="p-0">
+          {Object.entries(bagsByDate).map(([date, bags]) => {
+            const isNoDate = date === "";
+            const groupKey = isNoDate ? "no-date" : date;
+            return (
+              <Card key={groupKey} className="p-0">
                 <CardHeader className="pt-8 pb-1">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Calendar className="text-muted-foreground h-4 w-4" />
-                    <Input
-                      type="date"
-                      value={date}
-                      onChange={(e) => updateDateGroupDate(date, e.target.value)}
-                      className="w-auto border-0 p-0 text-base font-semibold focus-visible:ring-0"
-                    />
+                    {isNoDate ? (
+                      <span className="text-muted-foreground text-sm font-normal">No Date</span>
+                    ) : (
+                      <Input
+                        type="date"
+                        value={date}
+                        onChange={(e) => updateDateGroupDate(date, e.target.value)}
+                        className="w-auto border-0 p-0 text-base font-semibold focus-visible:ring-0"
+                      />
+                    )}
+                    <div className="ml-auto flex items-center gap-1.5">
+                      <Checkbox
+                        id={`no-date-group-${groupKey}`}
+                        checked={isNoDate}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            updateDateGroupDate(date, "");
+                          } else {
+                            updateDateGroupDate("", new Date().toISOString().split("T")[0]);
+                          }
+                        }}
+                      />
+                      <Label
+                        htmlFor={`no-date-group-${groupKey}`}
+                        className="text-muted-foreground cursor-pointer text-xs font-normal"
+                      >
+                        No date
+                      </Label>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1 pb-8">
@@ -126,7 +152,8 @@ export function IndividualBagsSection({
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            );
+          })}
 
           {/* Add Date Group button */}
           <Button variant="outline" onClick={addDateGroup} className="w-full">

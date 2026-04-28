@@ -49,9 +49,9 @@ export interface MachineRun {
   // Order Info inputs
   machine_run?: string;
   mama_name?: string;
-  date_received?: string;
-  date_processed?: string;
-  date_packed?: string;
+  date_received?: string | null;
+  date_processed?: string | null;
+  date_packed?: string | null;
   // Run Calculations inputs
   bags_weight_g?: number;
   powder_weight_g?: number;
@@ -74,7 +74,7 @@ export interface IndividualBag {
   bag_id: string;
   machine_run_id: string;
   bag_number: number;
-  date_expressed?: string;
+  date_expressed?: string | null;
   time_expressed?: string;
   weight_g?: number;
   created_at: string;

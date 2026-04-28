@@ -49,7 +49,7 @@ interface CrossCheck {
 
 const individualBagSchema = z.object({
   id: z.string(),
-  date: z.string().min(1, "Date is required"),
+  date: z.string(),
   weight: z
     .string()
     .min(1, "Weight is required")
@@ -65,7 +65,10 @@ const crossCheckSchema = z.object({
 const machineRunSchema = z.object({
   // Step 1: Info
   mamaName: z.string().min(1, "Mama's name is required"),
-  dateExpressed: z.string().min(1, "Date expressed is required"),
+  dateExpressed: z.string(),
+  noDateExpressed: z.boolean(),
+  noDateProcessed: z.boolean(),
+  noDatePacked: z.boolean(),
   runNumber: z.string(),
   machineRun: z.string(),
   status: z.string(),
@@ -95,6 +98,9 @@ type WizardData = z.infer<typeof machineRunSchema>;
 const initialData: WizardData = {
   mamaName: "",
   dateExpressed: "",
+  noDateExpressed: false,
+  noDateProcessed: false,
+  noDatePacked: false,
   runNumber: "",
   machineRun: "",
   status: "milk_arrived",
@@ -146,6 +152,9 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   const getBasicInfo = (mr: MachineRun) => ({
     mamaName: mr.mama_name ?? "",
     dateExpressed: mr.date_received ?? "",
+    noDateExpressed: mr.date_received === null,
+    noDateProcessed: mr.date_processed === null,
+    noDatePacked: mr.date_packed === null,
     runNumber: mr.run_number?.toString() ?? "",
     machineRun: mr.machine_run ?? "",
     status: mr.status ?? "milk_arrived",
@@ -312,12 +321,13 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   const addDateGroup = () => {
     let newDate: string;
 
-    if (data.bags.length === 0) {
-      // If no bags exist, use today's date
+    const allDates = data.bags.map((bag) => bag.date).filter((date) => date);
+
+    if (data.bags.length === 0 || allDates.length === 0) {
+      // If no bags exist or all bags have no date, use today's date
       newDate = new Date().toISOString().split("T")[0];
     } else {
       // Find the latest date among all bags
-      const allDates = data.bags.map((bag) => bag.date).filter((date) => date);
       const latestDate = allDates.reduce((latest, current) => {
         return new Date(current) > new Date(latest) ? current : latest;
       }, allDates[0]);
@@ -359,21 +369,25 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     // Base validation: mama name required
     if (!data.mamaName.trim()) return false;
 
+    const hasDateExpressed = data.noDateExpressed || data.dateExpressed.trim() !== "";
+
     // Status-based validation
     if (data.status === "milk_arrived" || data.status === "pending") {
-      return data.dateExpressed.trim() !== "";
+      return hasDateExpressed;
     } else if (data.status === "processing") {
-      return data.dateExpressed.trim() !== "" && data.bagsWeight.trim() !== "" && data.dateProcessed.trim() !== "";
+      const hasDateProcessed = data.noDateProcessed || data.dateProcessed.trim() !== "";
+      return hasDateExpressed && data.bagsWeight.trim() !== "" && hasDateProcessed;
     } else if (data.status === "completed") {
-      return data.dateExpressed.trim() !== "";
+      return hasDateExpressed;
     }
     return true;
   };
 
   const validateStep2 = () => {
-    return data.bags.length > 0 && data.bags.every((bag) => bag.date && bag.weight);
+    return data.bags.length > 0 && data.bags.every((bag) => bag.weight && bag.weight.trim() !== "");
   };
 
+  // eslint-disable-next-line complexity
   const validateStep3 = () => {
     // For completed status, validate all required fields
     if (data.status === "completed") {
@@ -384,8 +398,8 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
         data.waterToAdd.trim() !== "" &&
         data.waterActivityLevel.trim() !== "" &&
         data.gramRatioStaffInput.trim() !== "" &&
-        data.dateProcessed.trim() !== "" &&
-        data.datePacked.trim() !== ""
+        (data.noDateProcessed || data.dateProcessed.trim() !== "") &&
+        (data.noDatePacked || data.datePacked.trim() !== "")
       );
     }
     return true; // For other statuses, fields are optional
@@ -439,9 +453,9 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       | "qa_failed"
       | "cancelled",
     mama_name: data.mamaName,
-    date_received: data.dateExpressed,
-    date_processed: data.dateProcessed || undefined,
-    date_packed: data.datePacked || undefined,
+    date_received: data.noDateExpressed ? null : data.dateExpressed || null,
+    date_processed: data.noDateProcessed ? null : data.dateProcessed || null,
+    date_packed: data.noDatePacked ? null : data.datePacked || null,
     remarks: data.remarks || undefined,
     machine_run: data.machineRun || undefined,
     handled_by: data.handledBy || undefined,
@@ -502,7 +516,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     const bagInserts = data.bags.map((bag, index) => ({
       machine_run_id: machineRunId,
       bag_number: index + 1,
-      date_expressed: bag.date,
+      date_expressed: bag.date || null,
       weight_g: parseFloat(bag.weight),
       user_id: order.user_id,
     }));

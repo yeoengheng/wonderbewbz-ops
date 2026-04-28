@@ -4,6 +4,7 @@
 import { Beaker, Scale } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,6 +37,9 @@ interface WizardData {
   // Step 1: Info
   mamaName: string;
   dateExpressed: string;
+  noDateExpressed: boolean;
+  noDateProcessed: boolean;
+  noDatePacked: boolean;
   runNumber: string;
   machineRun: string;
   status: string;
@@ -112,30 +116,78 @@ export function Step1({ data, updateData }: { data: WizardData; updateData: (upd
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="date-expressed">Date Received</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="date-expressed">Date Received</Label>
+              <div className="flex items-center gap-1.5">
+                <Checkbox
+                  id="no-date-expressed"
+                  checked={data.noDateExpressed}
+                  onCheckedChange={(checked) =>
+                    updateData({ noDateExpressed: !!checked, dateExpressed: checked ? "" : data.dateExpressed })
+                  }
+                />
+                <Label htmlFor="no-date-expressed" className="text-muted-foreground cursor-pointer text-xs font-normal">
+                  No date
+                </Label>
+              </div>
+            </div>
             <Input
               id="date-expressed"
               type="date"
               value={data.dateExpressed}
               onChange={(e) => updateData({ dateExpressed: e.target.value })}
+              disabled={data.noDateExpressed}
+              className={data.noDateExpressed ? "opacity-50" : ""}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="date-processed">Date Processed</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="date-processed">Date Processed</Label>
+              <div className="flex items-center gap-1.5">
+                <Checkbox
+                  id="no-date-processed"
+                  checked={data.noDateProcessed}
+                  onCheckedChange={(checked) =>
+                    updateData({ noDateProcessed: !!checked, dateProcessed: checked ? "" : data.dateProcessed })
+                  }
+                />
+                <Label htmlFor="no-date-processed" className="text-muted-foreground cursor-pointer text-xs font-normal">
+                  No date
+                </Label>
+              </div>
+            </div>
             <Input
               id="date-processed"
               type="date"
               value={data.dateProcessed}
               onChange={(e) => updateData({ dateProcessed: e.target.value })}
+              disabled={data.noDateProcessed}
+              className={data.noDateProcessed ? "opacity-50" : ""}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="date-packed">Date Packed</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="date-packed">Date Packed</Label>
+              <div className="flex items-center gap-1.5">
+                <Checkbox
+                  id="no-date-packed"
+                  checked={data.noDatePacked}
+                  onCheckedChange={(checked) =>
+                    updateData({ noDatePacked: !!checked, datePacked: checked ? "" : data.datePacked })
+                  }
+                />
+                <Label htmlFor="no-date-packed" className="text-muted-foreground cursor-pointer text-xs font-normal">
+                  No date
+                </Label>
+              </div>
+            </div>
             <Input
               id="date-packed"
               type="date"
               value={data.datePacked}
               onChange={(e) => updateData({ datePacked: e.target.value })}
+              disabled={data.noDatePacked}
+              className={data.noDatePacked ? "opacity-50" : ""}
             />
           </div>
           <div className="space-y-2">
