@@ -38,10 +38,14 @@ export function isNetworkError(error: unknown): boolean {
     );
   }
 
-  // Check for Supabase network errors
+  // Check for Supabase network errors and auth token expiry (401/403 are retryable — Clerk auto-refreshes)
   if (error && typeof error === "object") {
     const err = error as Record<string, unknown>;
     if (err.code === "PGRST000" || err.code === "NetworkError") {
+      return true;
+    }
+    // JWT expired — Clerk will refresh the token on the next attempt
+    if (err.status === 401 || err.status === 403) {
       return true;
     }
   }

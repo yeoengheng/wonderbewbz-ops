@@ -607,7 +607,16 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
 
   // eslint-disable-next-line complexity
   const handleSave = async () => {
-    if (!isLoaded || !order) return;
+    if (!order) {
+      toast.error("Unable to save", { description: "Order data is missing. Please close and reopen the form." });
+      return;
+    }
+    if (!isLoaded) {
+      toast.error("Session not ready", {
+        description: "Your session is still loading. Please wait a moment and try again.",
+      });
+      return;
+    }
 
     // Backup form data before attempting save
     backup.backupData();
