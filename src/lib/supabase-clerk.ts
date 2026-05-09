@@ -23,24 +23,45 @@ export function createClerkSupabaseClient(session: Record<string, unknown>) {
       let token;
       try {
         token = await (session as any).getToken({ template: "supabase" });
-        console.log("Got Supabase template token");
-      } catch (error) {
+      } catch {
         console.warn("Supabase JWT template not found, using default token");
         try {
           token = await (session as any).getToken();
-          console.log("Got default token");
         } catch (err) {
           console.error("Failed to get any token", err);
           return null;
         }
       }
 
-      if (!token) {
-        console.error("No token available");
+      return token ?? null;
+    },
+  });
+}
+
+// Preferred: Create Supabase client with a stable getToken callback (from useAuth)
+// This avoids session reference instability and exposes orgId without extra hooks
+export function createClerkSupabaseClientFromGetToken(
+  getToken: (options?: { template?: string }) => Promise<string | null>,
+) {
+  return createClient<Database>(supabaseUrl, supabaseKey, {
+    global: {
+      headers: {
+        apikey: supabaseKey,
+      },
+    },
+    accessToken: async () => {
+      try {
+        const token = await getToken({ template: "supabase" });
+        if (token) return token;
+      } catch {
+        // "supabase" template not configured in Clerk dashboard — fall back to default
+      }
+      try {
+        return await getToken();
+      } catch (err) {
+        console.error("Failed to get Clerk token for Supabase", err);
         return null;
       }
-
-      return token;
     },
   });
 }

@@ -25,6 +25,12 @@ export function formatDatabaseError(error: unknown): AppError {
       "23502": "Required information is missing. Please fill in all required fields.",
       "42P01": "Database table not found. Please contact support.",
       "42703": "Database column not found. Please contact support.",
+      // RLS / permission denied — typically means org_id mismatch or missing org context
+      "42501":
+        "Permission denied. Your session may have expired or you may not have access to this organization. Please refresh the page and try again.",
+      // PostgREST JWT errors
+      PGRST301: "Your session has expired. Please refresh the page and sign in again.",
+      PGRST204: "No data was returned. The record may not have been saved — please try again.",
     };
 
     const userMessage =

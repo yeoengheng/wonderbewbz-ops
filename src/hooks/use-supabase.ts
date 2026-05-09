@@ -1,16 +1,19 @@
 import { useMemo } from "react";
 
-import { useSession } from "@clerk/nextjs";
+import { useAuth, useSession } from "@clerk/nextjs";
 
-import { createClerkSupabaseClient } from "@/lib/supabase-clerk";
+import { createClerkSupabaseClientFromGetToken } from "@/lib/supabase-clerk";
 
 // Hook to get authenticated Supabase client with Clerk session
 export function useSupabase() {
   const { session } = useSession();
+  const { getToken, orgId, isLoaded: authLoaded, isSignedIn } = useAuth();
 
+  // useMemo with getToken (stable reference from Clerk) avoids recreating
+  // the client on every render while always using the freshest token
   const supabase = useMemo(() => {
-    return createClerkSupabaseClient(session as unknown as Record<string, unknown>);
-  }, [session]);
+    return createClerkSupabaseClientFromGetToken(getToken);
+  }, [getToken]);
 
-  return { supabase, session, isLoaded: !!session };
+  return { supabase, session, orgId, isLoaded: authLoaded && isSignedIn === true };
 }

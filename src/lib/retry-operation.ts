@@ -44,10 +44,11 @@ export function isNetworkError(error: unknown): boolean {
     if (err.code === "PGRST000" || err.code === "NetworkError") {
       return true;
     }
-    // JWT expired — Clerk will refresh the token on the next attempt
-    if (err.status === 401 || err.status === 403) {
+    // 401: JWT expired — Clerk auto-refreshes, so a retry will get a fresh token
+    if (err.status === 401) {
       return true;
     }
+    // 403 is a permission / RLS violation — retrying won't help
   }
 
   return false;

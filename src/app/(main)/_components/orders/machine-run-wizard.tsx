@@ -125,7 +125,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
   const [loading, setLoading] = useState(false);
   const [bagCounter, setBagCounter] = useState(0);
   const [initialized, setInitialized] = useState(false);
-  const { supabase, isLoaded } = useSupabase();
+  const { supabase, orgId, isLoaded } = useSupabase();
   const abortSignal = useAbortOnUnmount();
 
   const form = useForm<WizardData>({
@@ -474,6 +474,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       run_number: runNumber,
       ...buildMachineRunData(),
       user_id: order.user_id,
+      org_id: orgId ?? null,
     };
 
     const { data: machineRun, error } = await supabase
@@ -519,6 +520,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       date_expressed: bag.date || null,
       weight_g: parseFloat(bag.weight),
       user_id: order.user_id,
+      org_id: orgId ?? null,
     }));
 
     // @ts-expect-error: Supabase RLS policy causing type inference issue
@@ -544,6 +546,7 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
       powder_weight_g: parseFloat(check.powderWeight),
       quantity: parseInt(check.quantity),
       user_id: order.user_id,
+      org_id: orgId ?? null,
     }));
 
     // @ts-expect-error: Supabase RLS policy causing type inference issue
@@ -614,6 +617,12 @@ export function MachineRunWizard({ open, onOpenChange, order, onComplete, editin
     if (!isLoaded) {
       toast.error("Session not ready", {
         description: "Your session is still loading. Please wait a moment and try again.",
+      });
+      return;
+    }
+    if (!orgId) {
+      toast.error("Organization not found", {
+        description: "Your account must be part of an organization to save data. Please contact your administrator.",
       });
       return;
     }
